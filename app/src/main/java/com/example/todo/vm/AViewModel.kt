@@ -26,18 +26,21 @@ class AViewModel : BaseViewModel() {
     //할일 문구
     val todoStr = MutableLiveData<String>("")
 
+    //문구체크.
+    private val _isTextCheck = MutableLiveData<Boolean>()
+    val isTextCheck : LiveData<Boolean> get() = _isTextCheck
+
     lateinit var mFragmentB : BFragment
 
     //저장 버튼
     val onClickButton = MutableLiveData<Unit>()
 
 
-    /**
-     * @link { BFragment }
-     */
+
     fun addTodoData (text : String = "") {
+
         if (text == "") {
-            msgBox.baseShowToast("문구를 입력해주세요.")
+            _isTextCheck.value = false
             return
         }
 

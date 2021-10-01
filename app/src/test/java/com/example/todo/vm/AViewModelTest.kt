@@ -14,8 +14,6 @@ class AViewModelTest : AbstractKoinTest() {
     private val viewModel by inject<AViewModel>()
 
 
-
-
     @Test
     fun addTodoDataTrue() {
 
