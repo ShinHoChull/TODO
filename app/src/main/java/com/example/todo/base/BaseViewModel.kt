@@ -1,11 +1,12 @@
 package com.example.todo.base
 
 import androidx.lifecycle.ViewModel
+import com.example.todo.model.domain.Todo
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import org.koin.core.KoinComponent
 
-open class BaseViewModel : ViewModel() {
+open class BaseViewModel : ViewModel() , KoinComponent {
 
     /**
      * RxJava 의 observing을 위한 부분.
@@ -20,4 +21,6 @@ open class BaseViewModel : ViewModel() {
         compositeDisposable.clear()
         super.onCleared()
     }
+
+
 }

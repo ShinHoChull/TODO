@@ -1,4 +1,4 @@
-package com.leaf.android_mvvm_example.di.modules
+package com.example.todo.di.modules
 
 import com.example.todo.common.MsgBox
 import org.koin.android.ext.koin.androidContext

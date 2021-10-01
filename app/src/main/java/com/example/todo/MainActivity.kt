@@ -12,6 +12,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.example.todo.base.BaseActivity
+import com.example.todo.common.Defines
 import com.example.todo.databinding.ActivityMainBinding
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import com.example.todo.vm.AViewModel
@@ -37,6 +38,13 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        viewModel.todoList.observe(this) {
+            Defines.log("change data")
+        }
+    }
 
     private fun setUpNavigation() {
         mNavController = (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment).navController
@@ -57,8 +65,8 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
 
         R.id.action_add -> {
-
             mNavController.navigate(R.id.action_AFragment_to_BFragment)
+
             true
         }
 
@@ -68,7 +76,6 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
         }
 
         R.id.success -> {
-
 
             true
         }

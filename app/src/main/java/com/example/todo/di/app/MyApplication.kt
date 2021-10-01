@@ -2,7 +2,7 @@ package com.example.todo.di.app
 
 import android.app.Application
 import com.example.todo.di.modules.activityModule
-import com.leaf.android_mvvm_example.di.modules.appModule
+import com.example.todo.di.modules.appModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 

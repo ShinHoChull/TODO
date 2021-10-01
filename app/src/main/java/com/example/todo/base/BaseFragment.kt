@@ -9,6 +9,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
+import androidx.navigation.Navigation
 import com.example.todo.BR
 
 abstract class BaseFragment<B : ViewDataBinding , VM : ViewModel> (
@@ -38,6 +39,10 @@ abstract class BaseFragment<B : ViewDataBinding , VM : ViewModel> (
             setVariable(BR.vm, viewModel)
             lifecycleOwner = viewLifecycleOwner
         }
+    }
+
+    public fun back() {
+        Navigation.findNavController(requireView()).navigateUp()
     }
 
 
