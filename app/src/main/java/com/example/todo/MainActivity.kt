@@ -42,7 +42,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
         super.onResume()
 
         viewModel.todoList.observe(this) {
-            Defines.log("change data")
+            Defines.log("MainActivity change data")
         }
     }
 

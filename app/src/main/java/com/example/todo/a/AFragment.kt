@@ -36,6 +36,9 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
     }
 
 
+
+
+
     private fun setUpListener() {
 
         viewModel.todoList.observe(viewLifecycleOwner) {

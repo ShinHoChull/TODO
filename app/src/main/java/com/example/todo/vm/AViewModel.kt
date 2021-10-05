@@ -4,8 +4,10 @@ import android.view.View
 import android.widget.EditText
 import androidx.databinding.InverseMethod
 import androidx.databinding.ViewDataBinding
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import com.example.todo.b.BFragment
 import com.example.todo.base.BaseFragment
 import com.example.todo.base.BaseViewModel
@@ -30,14 +32,12 @@ class AViewModel : BaseViewModel() {
     private val _isTextCheck = MutableLiveData<Boolean>()
     val isTextCheck : LiveData<Boolean> get() = _isTextCheck
 
-    lateinit var mFragmentB : BFragment
 
-    //저장 버튼
-    val onClickButton = MutableLiveData<Unit>()
-
+    private val _openEvent = MutableLiveData<Event<String>>()
+    val openEvent: LiveData<Event<String>> get() = _openEvent
 
 
-    fun addTodoData (text : String = "") {
+    fun onClickEvent(text: String) {
 
         if (text == "") {
             _isTextCheck.value = false
@@ -45,7 +45,7 @@ class AViewModel : BaseViewModel() {
         }
 
         val arr = _todoList.value?.clone() as ArrayList<Todo>
-        _todoList.value?.clear()
+        //_todoList.value?.clear()
 
         arr.apply {
             add(Todo(arr.size
@@ -53,16 +53,36 @@ class AViewModel : BaseViewModel() {
                 , ""
                 , ""))
         }
-
         _todoList.value = arr
         todoStr.value = ""
 
-        mFragmentB.back()
+        _openEvent.value = Event(text)
     }
+}
 
+inline fun <T> LiveData<Event<T>>.eventObserve(
+    owner: LifecycleOwner,
+    crossinline onChanged: (T) -> Unit
+): Observer<Event<T>> {
+    val wrappedObserver = Observer<Event<T>> { t ->
+        t.getContentIfNotHandled()?.let {
+            onChanged.invoke(it)
+        }
+    }
+    observe(owner, wrappedObserver)
+    return wrappedObserver
+}
 
+class Event<out T>(private val content: T) {
 
+    private var hasBeenHandled = false
 
-
-
+    fun getContentIfNotHandled(): T? {
+        return if (hasBeenHandled) {
+            null
+        } else {
+            hasBeenHandled = true
+            content
+        }
+    }
 }
