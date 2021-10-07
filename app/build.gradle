@@ -76,10 +76,17 @@ dependencies {
     implementation "org.koin:koin-androidx-fragment:$koin_version"
     testImplementation "org.koin:koin-test:$koin_version"
 
+    //room
+    implementation "androidx.room:room-runtime:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+
+
     // test
     androidTestImplementation("org.mockito:mockito-android:2.24.5")
     testImplementation 'org.mockito:mockito-inline:2.21.0'
     testImplementation "com.google.truth:truth:1.0"
+
+
 
 
     testImplementation 'junit:junit:4.+'

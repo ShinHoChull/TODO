@@ -2,4 +2,5 @@
     <string name="app_name">TODO</string>
     <string name="action_add">main_add</string>
     <string name="action_remove">action_remove</string>
+    <string name="database">TODO.db</string>
 </resources>

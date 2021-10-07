@@ -1,19 +1,10 @@
 package com.example.todo.vm
 
-import android.view.View
-import android.widget.EditText
-import androidx.databinding.InverseMethod
-import androidx.databinding.ViewDataBinding
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
-import com.example.todo.b.BFragment
-import com.example.todo.base.BaseFragment
 import com.example.todo.base.BaseViewModel
-import com.example.todo.common.Defines
 import com.example.todo.common.MsgBox
-import com.example.todo.databinding.FragmentBBinding
+import com.example.todo.extensions.Event
 import com.example.todo.model.domain.Todo
 import org.koin.core.inject
 
@@ -48,7 +39,7 @@ class AViewModel : BaseViewModel() {
         //_todoList.value?.clear()
 
         arr.apply {
-            add(Todo(arr.size
+            add(Todo(arr.size.toLong()
                 , todoStr.value
                 , ""
                 , ""))
@@ -60,29 +51,4 @@ class AViewModel : BaseViewModel() {
     }
 }
 
-inline fun <T> LiveData<Event<T>>.eventObserve(
-    owner: LifecycleOwner,
-    crossinline onChanged: (T) -> Unit
-): Observer<Event<T>> {
-    val wrappedObserver = Observer<Event<T>> { t ->
-        t.getContentIfNotHandled()?.let {
-            onChanged.invoke(it)
-        }
-    }
-    observe(owner, wrappedObserver)
-    return wrappedObserver
-}
 
-class Event<out T>(private val content: T) {
-
-    private var hasBeenHandled = false
-
-    fun getContentIfNotHandled(): T? {
-        return if (hasBeenHandled) {
-            null
-        } else {
-            hasBeenHandled = true
-            content
-        }
-    }
-}
