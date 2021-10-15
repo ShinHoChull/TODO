@@ -21,7 +21,7 @@ class AViewModel : BaseViewModel() {
 
     //문구체크.
     private val _isTextCheck = MutableLiveData<Boolean>()
-    val isTextCheck : LiveData<Boolean> get() = _isTextCheck
+    val isTextCheck : LiveData<Boolean> get() = _isTextCheck 
 
 
     private val _openEvent = MutableLiveData<Event<String>>()
