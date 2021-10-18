@@ -22,7 +22,7 @@ class BFragment : BaseFragment<FragmentBBinding, AViewModel>(
 ) {
 
     override val viewModel: AViewModel by sharedViewModel()
-    private val msgBox : MsgBox by inject()
+    private val msgBox : MsgBox by inject() 
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
