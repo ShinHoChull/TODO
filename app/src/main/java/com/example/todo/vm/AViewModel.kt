@@ -3,12 +3,16 @@ package com.example.todo.vm
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.todo.base.BaseViewModel
+import com.example.todo.common.Defines
 import com.example.todo.common.MsgBox
 import com.example.todo.extensions.Event
 import com.example.todo.model.domain.Todo
+import com.example.todo.repository.TodoRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.koin.core.inject
-
-class AViewModel : BaseViewModel() {
+class AViewModel( val mRepository: TodoRepository ) : BaseViewModel() {
 
     val msgBox : MsgBox by inject()
 
@@ -19,36 +23,56 @@ class AViewModel : BaseViewModel() {
     //할일 문구
     val todoStr = MutableLiveData<String>("")
 
-    //문구체크.
-    private val _isTextCheck = MutableLiveData<Boolean>()
-    val isTextCheck : LiveData<Boolean> get() = _isTextCheck 
-
+    //문구 체크.
+    private val _isTextCheck = MutableLiveData<Boolean>(false)
+    val isTextCheck : MutableLiveData<Boolean> get() = _isTextCheck
 
     private val _openEvent = MutableLiveData<Event<String>>()
     val openEvent: LiveData<Event<String>> get() = _openEvent
 
+    private var _mTodoItems : LiveData<List<Todo>> = mRepository.getAllTodo()
+    val mTodoItems : LiveData<List<Todo>> get() = _mTodoItems
+
+    fun checkTextItem( isSet : Boolean , position : Int ) {
+        Defines.log("isSet->$isSet position->$position")
+    }
 
     fun onClickEvent(text: String) {
 
         if (text == "") {
-            _isTextCheck.value = false
+            _isTextCheck.value = true
             return
         }
 
-        val arr = _todoList.value?.clone() as ArrayList<Todo>
-        //_todoList.value?.clear()
+        _isTextCheck.value = false
 
-        arr.apply {
-            add(Todo(arr.size.toLong()
-                , todoStr.value
-                , ""
-                , ""))
+        Todo(null
+            , todoStr.value
+            , ""
+            , "").apply {
+
+            _todoList.value?.add(this)
+
+            GlobalScope.launch(Dispatchers.IO) {
+                mRepository.insert(this@apply)
+            }
         }
-        _todoList.value = arr
-        todoStr.value = ""
 
+        todoStr.value = ""
         _openEvent.value = Event(text)
     }
+
+    fun updateTodo(obj : Todo) {
+        GlobalScope.launch(Dispatchers.IO) {
+            mRepository.updateTodo(obj)
+        }
+    }
+
+
+
+
+
 }
+
 
 

@@ -19,7 +19,7 @@ import kotlinx.android.synthetic.main.fragment_b.*
 abstract class BaseFragment<B : ViewDataBinding , VM : ViewModel> (
     @LayoutRes private val layoutResId : Int) : Fragment() {
 
-    private lateinit var mBinding : B
+    lateinit var mBinding : B
     abstract val viewModel : VM
 
     override fun onCreateView(

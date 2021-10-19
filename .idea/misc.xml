@@ -7,7 +7,7 @@
         <entry key="app/src/main/res/layout/app_bar_home.xml" value="0.36041666666666666" />
         <entry key="app/src/main/res/layout/fragment_a.xml" value="0.1" />
         <entry key="app/src/main/res/layout/fragment_b.xml" value="0.1" />
-        <entry key="app/src/main/res/layout/item_a_fragment.xml" value="0.2851851851851852" />
+        <entry key="app/src/main/res/layout/item_a_fragment.xml" value="0.25" />
         <entry key="app/src/main/res/layout/item_a_fragment_color.xml" value="0.19895833333333332" />
         <entry key="app/src/main/res/layout/item_a_list.xml" value="0.36041666666666666" />
         <entry key="app/src/main/res/menu/fragment_a.xml" value="0.36041666666666666" />
@@ -15,7 +15,7 @@
       </map>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" project-jdk-name="1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">

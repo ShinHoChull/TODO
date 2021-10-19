@@ -33,30 +33,20 @@ class BFragment : BaseFragment<FragmentBBinding, AViewModel>(
     }
 
 
-    override fun onResume() {
-        super.onResume()
-        Defines.log("onResume")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Defines.log("onDestroy")
-    }
-
     override fun onDestroyView() {
         super.keyboardHide(requireContext() , msg)
         super.onDestroyView()
-        Defines.log("onDestroyView")
     }
 
     private fun setUpObserver() {
 
         viewModel.openEvent.eventObserve(viewLifecycleOwner) {
+            super.keyboardHide(requireContext() , mBinding.msg)
             super.back()
         }
 
         viewModel.isTextCheck.observe(viewLifecycleOwner) {
-            msgBox.baseShowToast("메세지를 입력해주세요.")
+            if (it) msgBox.baseShowToast("메세지를 입력해주세요.")
         }
 
     }

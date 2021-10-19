@@ -74,6 +74,7 @@ dependencies {
     implementation "org.koin:koin-androidx-scope:$koin_version"
     implementation "org.koin:koin-androidx-viewmodel:$koin_version"
     implementation "org.koin:koin-androidx-fragment:$koin_version"
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     testImplementation "org.koin:koin-test:$koin_version"
 
     //room

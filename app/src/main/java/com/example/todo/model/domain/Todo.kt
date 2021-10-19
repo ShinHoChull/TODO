@@ -12,7 +12,7 @@ import kotlinx.android.parcel.Parcelize
 data class Todo(
     @PrimaryKey(autoGenerate = true) val id : Long? = null,
     @ColumnInfo(name = "todoStr") val todoStr : String? = null,
-    @ColumnInfo(name = "regDate") val regDate : String? = null,
-    @ColumnInfo(name = "updateDate") val updateDate : String? = null,
-    @ColumnInfo(name = "isCheck") val isCheck : Boolean = false
+    @ColumnInfo(name = "regDate") var regDate : String? = null,
+    @ColumnInfo(name = "updateDate") var updateDate : String? = null,
+    @ColumnInfo(name = "isCheck") var isCheck : Boolean = false
 ) : Parcelable

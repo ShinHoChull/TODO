@@ -1,13 +1,15 @@
 package com.example.todo.a.viewholder
 
+import android.graphics.Paint
 import android.view.View
+import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import com.example.todo.common.Defines
 import com.example.todo.common.MsgBox
 import com.example.todo.databinding.ItemAFragmentBinding
 import com.example.todo.model.domain.Todo
 import com.example.todo.vm.AViewModel
-import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 
 
 class AViewHolder (
@@ -16,16 +18,23 @@ class AViewHolder (
     binding.root
 ) {
 
-    //private val msgBox : MsgBox by inject()
+    fun bindItem(todo: Todo, vm : AViewModel) {
 
-    fun bindItem(todo: Todo) {
         binding.vo = todo
-        binding.listCheckBox.setOnCheckedChangeListener { _, isChecked ->
-            Defines.log("check->$isChecked position->$adapterPosition")
+
+        with(binding) {
+
+            listCheckBox.setOnCheckedChangeListener { _, isChecked ->
+                todo.isCheck = isChecked
+                if (todo.isCheck) text1.paintFlags = Paint.STRIKE_THRU_TEXT_FLAG
+                else text1.paintFlags = 0
+
+                vm.updateTodo(todo)
+            }
+
+            executePendingBindings()
         }
-
-        binding.executePendingBindings()
-
     }
+
 
 }
