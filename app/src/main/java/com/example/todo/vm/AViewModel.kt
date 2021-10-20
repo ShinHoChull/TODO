@@ -33,7 +33,7 @@ class AViewModel( val mRepository: TodoRepository ) : BaseViewModel() {
 
     fun onClickEvent(text: String) {
 
-        if (text == "") {
+        if (text.trim().isEmpty()) {
             _isTextCheck.value = true
             return
         }
@@ -50,6 +50,7 @@ class AViewModel( val mRepository: TodoRepository ) : BaseViewModel() {
             GlobalScope.launch(Dispatchers.IO) {
                 mRepository.insert(this@apply)
             }
+
         }
 
         todoStr.value = ""

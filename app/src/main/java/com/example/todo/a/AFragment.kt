@@ -50,7 +50,6 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
             list_view.adapter = this
             mAdapter = this
         }
-
     }
 
     override fun onResume() {
@@ -64,28 +63,10 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
                 }
                 mAdapter.setData(arr)
             }
-
         }
-
-
-//            .let {
-//
-        //}
-
     }
 
     private fun setUpObserver() {
-        //Defines.log("nullCheck -> ${viewModel.getAllData()?.size}")
-
-
-//        viewModel.mTodoItems.observe(viewLifecycleOwner) {
-//            //Defines.log("itemSize->${it.size}")
-//            Defines.log("dataSet!!!!")
-//            val arr =  ( it as ArrayList<Todo> ).apply {
-//                sortByDescending { it : Todo -> it.id }
-//            }
-//            mAdapter.setData(arr)
-//        }
 
     }
 
