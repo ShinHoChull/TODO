@@ -30,12 +30,6 @@ class AViewModel( val mRepository: TodoRepository ) : BaseViewModel() {
     private val _openEvent = MutableLiveData<Event<String>>()
     val openEvent: LiveData<Event<String>> get() = _openEvent
 
-    private var _mTodoItems : LiveData<List<Todo>> = mRepository.getAllTodo()
-    val mTodoItems : LiveData<List<Todo>> get() = _mTodoItems
-
-    fun checkTextItem( isSet : Boolean , position : Int ) {
-        Defines.log("isSet->$isSet position->$position")
-    }
 
     fun onClickEvent(text: String) {
 
@@ -68,7 +62,9 @@ class AViewModel( val mRepository: TodoRepository ) : BaseViewModel() {
         }
     }
 
-
+    fun getAllData() : List<Todo> {
+        return mRepository.getAllTodo()
+    }
 
 
 

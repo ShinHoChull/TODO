@@ -12,7 +12,7 @@ class TodoRepository(private val dao: TodoDAO ) {
         dao.insertTodo(obj)
     }
 
-    fun getAllTodo () : LiveData<List<Todo>> = dao.getTodoList()
+    fun getAllTodo () : List<Todo> = dao.getTodoList()
 
     fun updateTodo (obj : Todo) = dao.updateTodo(obj)
 

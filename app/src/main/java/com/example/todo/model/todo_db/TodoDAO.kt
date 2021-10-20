@@ -9,7 +9,7 @@ import com.example.todo.model.domain.Todo
 interface TodoDAO {
 
     @Query("Select * from Todo")
-    fun getTodoList() : LiveData<List<Todo>>
+    fun getTodoList() : List<Todo>
 
     @Insert
     fun insertTodo(todoModel : Todo)

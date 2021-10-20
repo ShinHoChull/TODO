@@ -2,6 +2,8 @@ package com.example.todo.a.viewholder
 
 import android.graphics.Paint
 import android.view.View
+import android.widget.CheckBox
+import android.widget.TextView
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import com.example.todo.common.Defines
@@ -18,24 +20,38 @@ class AViewHolder (
     binding.root
 ) {
 
-    fun bindItem(todo: Todo, vm : AViewModel) {
+    lateinit var listener : onChekBoxListener
+
+    interface onChekBoxListener {
+        fun checkChange(isCheck : Boolean ,  position : Int)
+    }
+
+
+    fun bindItem(todo: Todo, vm : AViewModel , listener : onChekBoxListener ) {
 
         binding.vo = todo
 
         binding.run {
 
-            listCheckBox.isChecked = todo.isCheck
+            listCheckBox.isChecked = todo.isCheck.let {
+                textStrike(it, text1)
+                it
+            }
 
-            listCheckBox.setOnCheckedChangeListener { _, isChecked ->
-                Defines.log("isCheck-> ${isChecked}")
-                todo.isCheck = isChecked
-                if (todo.isCheck) text1.paintFlags = Paint.STRIKE_THRU_TEXT_FLAG
-                else text1.paintFlags = 0
-
+            listCheckBox.setOnClickListener {
+                listener.checkChange(
+                    (it as CheckBox).isChecked
+                    , adapterPosition )
             }
 
             executePendingBindings()
         }
+
+    }
+
+    private fun textStrike(isCheck: Boolean, text : TextView) {
+        if (isCheck) text.paintFlags = Paint.STRIKE_THRU_TEXT_FLAG
+        else text.paintFlags = 0
 
     }
 

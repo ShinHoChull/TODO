@@ -11,11 +11,15 @@ import com.example.todo.base.BaseFragment
 import com.example.todo.databinding.FragmentABinding
 import com.example.todo.vm.AViewModel
 import com.example.todo.R
+import com.example.todo.a.viewholder.AViewHolder
 import com.example.todo.base.BaseViewModel
 import com.example.todo.common.Defines
 import com.example.todo.common.MsgBox
 import com.example.todo.model.domain.Todo
 import kotlinx.android.synthetic.main.fragment_a.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -25,7 +29,7 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
 ) {
 
     override val viewModel: AViewModel by sharedViewModel()
-    private lateinit var mAdapter : AdapterA
+    private lateinit var mAdapter: AdapterA
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -40,36 +44,49 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
 
     }
 
-    private fun setUpVal () {
+    private fun setUpVal() {
 
         AdapterA(ArrayList(), viewModel).apply {
             list_view.adapter = this
             mAdapter = this
+        }
 
-            viewModel.mTodoItems.let {
-                val arr =  ( it as ArrayList<Todo> ).apply {
-                    sortByDescending { it : Todo -> it.id }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        GlobalScope.launch(Dispatchers.IO) {
+
+            viewModel.getAllData().let {
+                val arr = (it as ArrayList<Todo>).apply {
+                    sortByDescending { it: Todo -> it.id }
                 }
-                setData(arr)
+                mAdapter.setData(arr)
             }
 
         }
+
+
+//            .let {
+//
+        //}
+
     }
 
     private fun setUpObserver() {
+        //Defines.log("nullCheck -> ${viewModel.getAllData()?.size}")
 
 
-
-        viewModel.mTodoItems.observe(viewLifecycleOwner) {
+//        viewModel.mTodoItems.observe(viewLifecycleOwner) {
+//            //Defines.log("itemSize->${it.size}")
 //            Defines.log("dataSet!!!!")
 //            val arr =  ( it as ArrayList<Todo> ).apply {
 //                sortByDescending { it : Todo -> it.id }
 //            }
 //            mAdapter.setData(arr)
-        }
+//        }
 
     }
-
-
 
 }
