@@ -41,7 +41,6 @@
             android:id="@+id/list_check_box"
             android:layout_width="30dp"
             android:layout_height="wrap_content"
-            android:checked="@{vo.check}"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintRight_toLeftOf="@id/text1"

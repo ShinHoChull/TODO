@@ -22,18 +22,21 @@ class AViewHolder (
 
         binding.vo = todo
 
-        with(binding) {
+        binding.run {
+
+            listCheckBox.isChecked = todo.isCheck
 
             listCheckBox.setOnCheckedChangeListener { _, isChecked ->
+                Defines.log("isCheck-> ${isChecked}")
                 todo.isCheck = isChecked
                 if (todo.isCheck) text1.paintFlags = Paint.STRIKE_THRU_TEXT_FLAG
                 else text1.paintFlags = 0
 
-                vm.updateTodo(todo)
             }
 
             executePendingBindings()
         }
+
     }
 
 

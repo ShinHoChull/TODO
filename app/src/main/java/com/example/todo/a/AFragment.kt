@@ -42,18 +42,30 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
 
     private fun setUpVal () {
 
-        mAdapter = AdapterA(ArrayList(), viewModel).apply {
+        AdapterA(ArrayList(), viewModel).apply {
             list_view.adapter = this
+            mAdapter = this
+
+            viewModel.mTodoItems.let {
+                val arr =  ( it as ArrayList<Todo> ).apply {
+                    sortByDescending { it : Todo -> it.id }
+                }
+                setData(arr)
+            }
+
         }
     }
 
     private fun setUpObserver() {
 
+
+
         viewModel.mTodoItems.observe(viewLifecycleOwner) {
-            Defines.log("dataSet!!!!")
-            val arr = it as ArrayList<Todo>
-            arr.sortByDescending { it : Todo -> it.id }
-            mAdapter.setData(arr)
+//            Defines.log("dataSet!!!!")
+//            val arr =  ( it as ArrayList<Todo> ).apply {
+//                sortByDescending { it : Todo -> it.id }
+//            }
+//            mAdapter.setData(arr)
         }
 
     }

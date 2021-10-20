@@ -39,7 +39,8 @@ class AdapterA(
 
 
     fun setData(dataSet: ArrayList<Todo>) {
-        if (dataSet.size <= 0) return
+        if (dataSet.isEmpty()) return
+
         this.dataSet = dataSet
         notifyDataSetChanged()
     }
