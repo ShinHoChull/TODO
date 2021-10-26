@@ -24,8 +24,8 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
 
     private lateinit var mNavController: NavController
     private lateinit var mToolbar: Toolbar
-    private var temp1 : Int = 0
-    private var temp2 : Int = 0
+    private var temp1 : Int = 0;
+    private var temp2 : Int = 0;
 
     override val viewModel: AViewModel by viewModel()
 
