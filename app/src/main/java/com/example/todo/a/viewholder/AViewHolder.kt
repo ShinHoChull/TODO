@@ -24,6 +24,7 @@ class AViewHolder (
 
     interface onChekBoxListener {
         fun checkChange(isCheck : Boolean ,  position : Int)
+        fun textClick(position : Int)
     }
 
 
@@ -43,6 +44,11 @@ class AViewHolder (
                     (it as CheckBox).isChecked
                     , adapterPosition )
             }
+
+            text1.setOnClickListener{
+                listener.textClick(adapterPosition)
+            }
+
 
             executePendingBindings()
         }

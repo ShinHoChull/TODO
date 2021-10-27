@@ -16,6 +16,9 @@ import com.example.todo.common.getRandNum
 import com.example.todo.databinding.ItemAFragmentBinding
 import com.example.todo.model.domain.Todo
 import com.example.todo.vm.AViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 
 class AdapterA(
@@ -48,7 +51,26 @@ class AdapterA(
         if (dataSet.isEmpty()) return
 
         this.dataSet = dataSet
-        notifyDataSetChanged()
+        GlobalScope.launch {
+            notifyDataSetChanged()
+        }
+    }
+
+    fun delData(position: Int) {
+        var idx = 0;
+
+        val ite = this.dataSet.iterator()
+        while (ite.hasNext()) {
+            val row = ite.next()
+            if (position == row.id?.toInt()) {
+                vm.deleteTodo(row).run {
+                    ite.remove()
+                    notifyItemRemoved(idx)
+                }
+
+            }
+            idx++
+        }
     }
 
     override fun checkChange(isCheck: Boolean, position: Int) {
@@ -61,6 +83,12 @@ class AdapterA(
             notifyItemChanged(position)
             vm.updateTodo(row)
         }, 100)
+    }
+
+    override fun textClick(position: Int) {
+
+
 
     }
+
 }

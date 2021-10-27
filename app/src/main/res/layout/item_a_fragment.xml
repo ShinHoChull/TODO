@@ -47,5 +47,16 @@
             app:layout_constraintBottom_toBottomOf="parent"
             />
 
+        <TextView
+            app:layout_constraintLeft_toLeftOf="@id/text1"
+            app:layout_constraintTop_toBottomOf="@id/text1"
+            android:id="@+id/reg_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="10dp"
+            android:text='@{vo.regDate == null ? "-" : vo.regDate}'
+            android:textColor="#A4A2A2"
+            />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -60,13 +60,24 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
             viewModel.getAllData().let {
                 val arr = (it as ArrayList<Todo>).apply {
                     sortByDescending { it: Todo -> it.id }
+                    viewModel.setTodoList(it)
                 }
+
                 mAdapter.setData(arr)
             }
         }
     }
 
     private fun setUpObserver() {
+
+        viewModel.removeList.observe(viewLifecycleOwner) {
+
+            for (row in it) {
+
+                mAdapter.delData(row)
+            }
+
+        }
 
     }
 

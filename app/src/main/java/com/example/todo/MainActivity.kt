@@ -14,6 +14,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import com.example.todo.base.BaseActivity
 import com.example.todo.common.Defines
 import com.example.todo.databinding.ActivityMainBinding
+import com.example.todo.model.domain.Todo
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import com.example.todo.vm.AViewModel
 
@@ -38,17 +39,11 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-
-        viewModel.todoList.observe(this) {
-            Defines.log("MainActivity change data")
-        }
-    }
 
     private fun setUpNavigation() {
-        mNavController = (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment).navController
-        setupActionBarWithNavController(mNavController , null)
+        mNavController =
+            (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment).navController
+        setupActionBarWithNavController(mNavController, null)
     }
 
     private fun setUpToolbar() {
@@ -70,6 +65,16 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
         }
 
         R.id.action_remove -> {
+            val tempArr = ArrayList<Int>()
+
+            for (row in viewModel.todoList.value!!) {
+                if (row.isCheck) {
+                    tempArr.add(row.id!!.toInt())
+                }
+            }
+
+            viewModel.removeList.value = tempArr
+
             true
         }
 
@@ -89,6 +94,8 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
 
     override fun onSupportNavigateUp(): Boolean {
 
+        Defines.log("onNavigate1")
+
         this.clearToolbarMenu()
         mToolbar.inflateMenu(R.menu.main_toolbar)
 
@@ -97,7 +104,6 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
     }
 
     override fun onBackPressed() {
-
         mNavController.navigateUp()
     }
 
