@@ -66,12 +66,10 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
 
         R.id.action_add -> {
             mNavController.navigate(R.id.action_AFragment_to_BFragment)
-
             true
         }
 
         R.id.action_remove -> {
-
             true
         }
 
