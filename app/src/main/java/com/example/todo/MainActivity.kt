@@ -94,8 +94,6 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
 
     override fun onSupportNavigateUp(): Boolean {
 
-        Defines.log("onNavigate1")
-
         this.clearToolbarMenu()
         mToolbar.inflateMenu(R.menu.main_toolbar)
 

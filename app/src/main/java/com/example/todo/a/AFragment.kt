@@ -46,7 +46,7 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
 
     private fun setUpVal() {
 
-        AdapterA(ArrayList(), viewModel).apply {
+        AdapterA(ArrayList(), viewModel , requireActivity()).apply {
             list_view.adapter = this
             mAdapter = this
         }

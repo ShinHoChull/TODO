@@ -1,5 +1,6 @@
 package com.example.todo.a
 
+import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -8,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.MainThread
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import com.example.todo.a.viewholder.AViewHolder
@@ -24,6 +26,7 @@ import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 class AdapterA(
     private var dataSet: ArrayList<Todo>
     , private val vm : AViewModel
+    , private val context : FragmentActivity
     ) :
     RecyclerView.Adapter<AViewHolder>()
     , AViewHolder.onChekBoxListener {
@@ -67,7 +70,6 @@ class AdapterA(
                     ite.remove()
                     notifyItemRemoved(idx)
                 }
-
             }
             idx++
         }
@@ -86,9 +88,8 @@ class AdapterA(
     }
 
     override fun textClick(position: Int) {
-
-
-
+        val modalBottomSheet = ABottomSheet()
+        modalBottomSheet.show(context.supportFragmentManager , ABottomSheet.TAG)
     }
 
 }
