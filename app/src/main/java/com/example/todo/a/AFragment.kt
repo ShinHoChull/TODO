@@ -50,6 +50,7 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
             list_view.adapter = this
             mAdapter = this
         }
+
     }
 
     override fun onResume() {

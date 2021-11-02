@@ -24,7 +24,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
 ) {
 
     private lateinit var mNavController: NavController
-    private lateinit var mToolbar: Toolbar
+    private lateinit var mToolbar: Toolbar;
 
     override val viewModel: AViewModel by viewModel()
 
@@ -37,6 +37,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
         if (savedInstanceState != null) {
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
         }
+
     }
 
 
@@ -104,5 +105,8 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
     override fun onBackPressed() {
         mNavController.navigateUp()
     }
+
+
+
 
 }
