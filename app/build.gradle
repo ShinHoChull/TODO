@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.todo"
-        minSdk 22
+        minSdk 24
         targetSdk 30
         versionCode 1
         versionName "1.0"
@@ -55,6 +55,9 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment-ktx:2.3.5'
     implementation 'androidx.navigation:navigation-ui-ktx:2.3.5'
 
+    //location
+    implementation 'com.google.android.gms:play-services-location:18.0.0'
+
     // ViewModel
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$aac_version"
 
@@ -75,6 +78,7 @@ dependencies {
     implementation "org.koin:koin-androidx-viewmodel:$koin_version"
     implementation "org.koin:koin-androidx-fragment:$koin_version"
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+
     testImplementation "org.koin:koin-test:$koin_version"
 
     //room
