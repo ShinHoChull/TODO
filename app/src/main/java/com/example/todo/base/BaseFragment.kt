@@ -20,7 +20,7 @@ abstract class BaseFragment<B : ViewDataBinding , VM : ViewModel> (
     @LayoutRes private val layoutResId : Int) : Fragment() {
 
     lateinit var mBinding : B
-    abstract val viewModel : VM;
+    abstract val viewModel : VM
 
     override fun onCreateView(
         inflater: LayoutInflater,
