@@ -38,7 +38,6 @@ abstract class BaseActivity<B : ViewDataBinding, VM : BaseViewModel>(
                 Manifest.permission.ACCESS_COARSE_LOCATION
             )
         )
-
     }
 
     fun showToast(message: String) =
