@@ -18,6 +18,17 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        release {
+            if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
+                storeFile file(MYAPP_UPLOAD_STORE_FILE)
+                storePassword MYAPP_UPLOAD_STORE_PASSWORD
+                keyAlias MYAPP_UPLOAD_KEY_ALIAS
+                keyPassword MYAPP_UPLOAD_KEY_PASSWORD
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -55,6 +66,9 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment-ktx:2.3.5'
     implementation 'androidx.navigation:navigation-ui-ktx:2.3.5'
 
+    //kakao
+    implementation "com.kakao.sdk:v2-user:2.8.2" 
+
     //location
     implementation 'com.google.android.gms:play-services-location:18.0.0'
 
@@ -66,7 +80,7 @@ dependencies {
 
 
     // RxJava
-    implementation "io.reactivex.rxjava3:rxjava:$rxjava_version"
+    //implementation "io.reactivex.rxjava3:rxjava:$rxjava_version"
 
     // RxLifecycle
     implementation "com.trello.rxlifecycle3:rxlifecycle:$lifecycle_version"

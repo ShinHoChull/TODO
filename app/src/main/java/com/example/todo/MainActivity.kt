@@ -37,7 +37,6 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
         if (savedInstanceState != null) {
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
         }
-
     }
 
 
@@ -75,7 +74,6 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
             }
 
             viewModel.removeList.value = tempArr
-
             true
         }
 
