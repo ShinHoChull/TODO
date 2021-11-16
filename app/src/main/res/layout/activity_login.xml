@@ -18,5 +18,17 @@
         android:src="@drawable/kakao_login_medium_wide"
         />
 
+    <Button
+        android:id="@+id/logout_bt"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/loginBt"
+        app:layout_constraintLeft_toLeftOf="@id/loginBt"
+        app:layout_constraintRight_toRightOf="@id/loginBt"
+        android:layout_marginTop="10dp"
+        android:text="LOGOUT"
+        android:padding="10dp"
+        />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
