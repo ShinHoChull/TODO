@@ -20,6 +20,7 @@ import com.example.todo.model.domain.Todo
 import com.example.todo.vm.AViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 
@@ -54,7 +55,7 @@ class AdapterA(
         if (dataSet.isEmpty()) return
 
         this.dataSet = dataSet
-        GlobalScope.launch {
+        GlobalScope.launch() {
             notifyDataSetChanged()
         }
     }
