@@ -8,7 +8,9 @@ import com.example.todo.common.Defines
 import com.example.todo.common.MsgBox
 import com.example.todo.common.getNowTimeToStr
 import com.example.todo.extensions.Event
+import com.example.todo.model.domain.GPS
 import com.example.todo.model.domain.Todo
+import com.example.todo.repository.GpsRepository
 import com.example.todo.repository.TodoRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -16,7 +18,8 @@ import kotlinx.coroutines.launch
 import org.koin.core.inject
 import java.text.SimpleDateFormat
 
-class AViewModel( val mRepository: TodoRepository ) : BaseViewModel() {
+class AViewModel(private val mRepository: TodoRepository
+                 , private val mGpsRepository: GpsRepository ) : BaseViewModel() {
 
     val msgBox : MsgBox by inject()
 
@@ -80,6 +83,22 @@ class AViewModel( val mRepository: TodoRepository ) : BaseViewModel() {
     fun getAllData() : List<Todo> {
         return mRepository.getAllTodo()
     }
+
+
+    /**
+     * GPS
+     */
+
+    fun getAllGpsList() : List<GPS> {
+        return mGpsRepository.getAllGpsData()
+    }
+
+    fun getGpsList(id : Long) : List<GPS> {
+        return mGpsRepository.getGpsData(id)
+
+    }
+
+
 
 
 

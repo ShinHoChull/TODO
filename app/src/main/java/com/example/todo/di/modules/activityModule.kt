@@ -11,7 +11,7 @@ import org.koin.dsl.module
 val activityModule = module {
 
     viewModel {
-        AViewModel(get())
+        AViewModel(get(),get())
     }
 
 }

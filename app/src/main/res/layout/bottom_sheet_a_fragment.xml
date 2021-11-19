@@ -15,18 +15,10 @@
             android:layout_height="match_parent"
             android:background="#781212">
 
-            <TextView
-                android:id="@+id/bottom_text"
-                android:text="Alarm Time"
-                android:textSize="22dp"
-                android:textStyle="bold"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintLeft_toLeftOf="parent"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="20dp"
-                />
+            <RelativeLayout
+                android:id="@+id/map_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

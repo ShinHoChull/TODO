@@ -8,14 +8,19 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import com.example.todo.R
 import com.example.todo.common.Defines
-import com.google.android.gms.common.api.ResolvableApiException
+
 import com.google.android.gms.location.*
-import com.google.android.gms.tasks.OnCompleteListener
+
 import com.google.android.gms.tasks.Task
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlinx.android.synthetic.main.bottom_sheet_a_fragment.*
+import net.daum.mf.map.api.MapView
+
+import org.koin.android.ext.android.inject
 
 class ABottomSheet : BottomSheetDialogFragment() {
 
@@ -23,6 +28,7 @@ class ABottomSheet : BottomSheetDialogFragment() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private lateinit var locationCallback: LocationCallback
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,6 +43,17 @@ class ABottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setUpLocation()
+        setUpMap()
+    }
+
+    private fun setUpMap() {
+        val mapView = MapView(requireContext())
+        map_view.addView(mapView)
+    }
+
+    private fun setUpLocation() {
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
         this.createLocationRequest()
 
@@ -50,7 +67,9 @@ class ABottomSheet : BottomSheetDialogFragment() {
                 }
             }
         }
+
     }
+
 
     override fun onResume() {
         super.onResume()
@@ -59,17 +78,24 @@ class ABottomSheet : BottomSheetDialogFragment() {
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED ) {
-            Defines.log("2.허용되어있지 않음.")
-        }
 
-        else if ( ActivityCompat.checkSelfPermission (
+            Toast.makeText(requireContext()
+                ,"ACCESS_FINE_LOCATION not permission"
+                , Toast.LENGTH_SHORT
+            ).show()
+        }
+         else if ( ActivityCompat.checkSelfPermission (
                 requireContext(),
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Defines.log("2.허용되어있지 않음.")
+            Toast.makeText(requireContext()
+                ,"ACCESS_COARSE_LOCATION not permission"
+                , Toast.LENGTH_SHORT
+            ).show()
 
-        } else {
+        }
+        else {
 
             val locationRequest = LocationRequest.create().apply {
                 interval = 10000

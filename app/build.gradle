@@ -99,6 +99,9 @@ dependencies {
     implementation "androidx.room:room-runtime:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
 
+    //kakao map
+    implementation files('libs/libDaumMapAndroid.jar')
+
 
     // test
     androidTestImplementation("org.mockito:mockito-android:2.24.5")
