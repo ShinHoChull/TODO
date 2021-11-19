@@ -12,7 +12,7 @@ interface GpsDAO {
     @Query("select * from GPS")
     fun getAllGpsList() : List<GPS>
 
-    @Query("Select * from GPS where todo_num = :id")
+    @Query("Select * from GPS where todo_num = :id group by lat , lng")
     fun getGpsList(id : Long) : List<GPS>
 
     @Insert

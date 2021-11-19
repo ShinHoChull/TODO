@@ -1,10 +1,15 @@
 package com.example.todo.a
 
+import android.app.Activity
+import android.app.ActivityManager
 import android.app.Application
 import android.content.Intent
+import android.location.Location
 import android.os.Bundle
 
 import android.view.*
+import androidx.lifecycle.Observer
+import androidx.work.*
 
 import com.example.todo.base.BaseFragment
 
@@ -12,6 +17,7 @@ import com.example.todo.databinding.FragmentABinding
 import com.example.todo.vm.AViewModel
 import com.example.todo.R
 import com.example.todo.a.service.MyService
+import com.example.todo.a.service.MyService2
 
 import com.example.todo.common.Defines
 import com.example.todo.model.domain.Todo
@@ -20,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
+import java.util.concurrent.TimeUnit
 
 class AFragment : BaseFragment<FragmentABinding, AViewModel>(
     R.layout.fragment_a
@@ -27,6 +34,8 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
 
     override val viewModel: AViewModel by sharedViewModel()
     private lateinit var mAdapter: AdapterA
+
+    private lateinit var workManager : WorkManager
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -39,6 +48,51 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
         setUpVal()
         setUpObserver()
         setUpGPS()
+        //setUpWorker()
+    }
+
+    private fun setUpWorker() {
+        this.workManager =  WorkManager.getInstance(requireContext())
+
+        val data = workDataOf(Pair<String, Boolean>("isGoLocation", true))
+
+        //한번 실행.
+        var workRequest = OneTimeWorkRequestBuilder<LocationWorker>().setInputData(data).build()
+
+
+        //최소설정 시간이 15분 임
+        val locationWorkRequest = PeriodicWorkRequestBuilder<LocationWorker>(15
+            , TimeUnit.MINUTES)
+            .setInputData(data)
+            .build()
+
+        workManager.enqueue(workRequest)
+
+        /*
+           ExistingPeriodicWorkPolicy.KEEP     :  워크매니저가 실행중이 아니면 새로 실행하고, 실행중이면 아무작업도 하지 않는다.
+           ExistingPeriodicWorkPolicy.REPLACE  :  워크매니저를 무조건 다시 실행한다.
+        */
+        //workManager.enqueue(OneTimeWorkRequest.from(BlurWorker::class.java))
+
+//            .getInstance()
+//            .enqueueUniquePeriodicWork(""
+//            ,ExistingPeriodicWorkPolicy.KEEP
+//            ,locationWorkRequest)
+
+        workManager.getWorkInfoByIdLiveData(workRequest.id)
+            .observe(viewLifecycleOwner, Observer { workInfo ->
+                // Check if the current work's state is "successfully finished"
+                if (workInfo != null && workInfo.state == WorkInfo.State.SUCCEEDED) {
+                    Defines.log(
+                        "Success Worker->${
+                            workInfo.outputData.getBoolean(
+                                "success",
+                                false
+                            )
+                        }"
+                    )
+                }
+            })
     }
 
     /*
@@ -46,13 +100,13 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
      */
     private fun setUpGPS() {
         GlobalScope.launch(Dispatchers.IO) {
-            if (viewModel.getAllData().isNotEmpty()) {
+            if (viewModel.getAllData().isNotEmpty() && !MyService2.IS_ACTIVITY_RUNNING) {
 
                 Defines.log("GPS를 실행합니다.")
 
                 val intent = Intent(
-                    requireContext()
-                    , MyService::class.java).apply {
+                    requireContext(), MyService2::class.java
+                ).apply {
                     putExtra("flag", "start")
                 }
 
@@ -63,7 +117,7 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
 
     private fun setUpVal() {
 
-        AdapterA(ArrayList(), viewModel , requireActivity()).apply {
+        AdapterA(ArrayList(), viewModel, requireActivity()).apply {
             list_view.adapter = this
             mAdapter = this
         }
@@ -93,6 +147,19 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
             }
         }
     }
+
+
+
+//    public boolean isServiceRunningCheck() {
+//        ActivityManager manager = (ActivityManager) this.getSystemService(Activity.ACTIVITY_SERVICE);
+//        for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+//            if ("ServiceName".equals(service.service.getClassName())) {
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
+
 
 
 }

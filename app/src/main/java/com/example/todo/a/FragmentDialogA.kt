@@ -9,14 +9,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
 import com.example.todo.R
+import com.example.todo.common.Defines
 import com.example.todo.vm.AViewModel
 import kotlinx.android.synthetic.main.fragment_dialog_a.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import net.daum.mf.map.api.MapPoint
-import net.daum.mf.map.api.MapPolyline
-import net.daum.mf.map.api.MapView
+import net.daum.mf.map.api.*
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 
 
@@ -49,19 +48,21 @@ class FragmentDialogA : DialogFragment() {
 
         val polyLine = MapPolyline()
         polyLine.tag = 1000
-        polyLine.lineColor = Color.parseColor("#000000")
+        polyLine.lineColor = Color.argb(128, 255, 51, 0)
+
 
         GlobalScope.launch(Dispatchers.IO) {
             val rows = viewModel.getAllData()
             if (rows.isNotEmpty()) {
                 for (i in rows.indices) {
                     val todoRow = rows[i]
+                    Defines.log("todoRow.id->${todoRow.id!!}")
                     viewModel.getGpsList(todoRow.id!!).apply {
                         for (j in this.indices) {
                             val gpsRow = this[j]
                             val lat = gpsRow.latDataStr!!
                             val lng = gpsRow.lngDataStr!!
-
+                            Defines.log("polyLAT->${lat} , ${lng}")
                             polyLine.addPoint(
                                 MapPoint.mapPointWithGeoCoord(
                                     lat, lng
@@ -73,7 +74,12 @@ class FragmentDialogA : DialogFragment() {
             }
 
             launch {
+
                 mapView.addPolyline(polyLine)
+
+                val mapPointBounds = MapPointBounds(polyLine.mapPoints)
+                val padding = 100
+                mapView.moveCamera(CameraUpdateFactory.newMapPointBounds(mapPointBounds, padding))
             }
         }
 

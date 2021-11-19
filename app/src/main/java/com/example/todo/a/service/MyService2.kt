@@ -8,9 +8,12 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.util.Log
 import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -32,11 +35,12 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 import org.koin.android.ext.android.inject
 
-class MyService : Service() {
+class MyService2 : Service() {
 
     val mGpsRepository: GpsRepository by inject()
     val mTodoRepository: TodoRepository by inject()
 
+    private val handler = Handler(Looper.getMainLooper())
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
@@ -55,25 +59,54 @@ class MyService : Service() {
 
         if (flag.equals("start")) {
             Defines.log("GPS 실행합니다.")
-            showNotification()
             this.setUpGPS()
         } else {
+            Defines.log("serviceDie->65")
             stopSelf()
         }
         return START_STICKY
     }
 
     private fun setUpGPS() {
-
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(applicationContext)
+        this.createLocationRequest()
+    }
 
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult?) {
-                locationResult ?: return
-                for (location in locationResult.locations) {
-                    // Update UI with location data
 
-                    GlobalScope.launch(Dispatchers.IO) {
+    private val runnable = Runnable {
+
+        if (ActivityCompat.checkSelfPermission(
+                applicationContext,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Defines.log("serviceDie->84")
+            stopSelf()
+            Toast.makeText(
+                applicationContext, "ACCESS_FINE_LOCATION not permission", Toast.LENGTH_SHORT
+            ).show()
+        } else if (ActivityCompat.checkSelfPermission(
+                applicationContext,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Toast.makeText(
+                applicationContext, "ACCESS_COARSE_LOCATION not permission", Toast.LENGTH_SHORT
+            ).show()
+            Defines.log("serviceDie->95")
+            stopSelf()
+        } else {
+            getLastLocation()
+        }
+    }
+
+    @SuppressWarnings("MissingPermission")
+    private fun getLastLocation() {
+        fusedLocationClient.lastLocation.addOnSuccessListener { location : Location? ->
+            if (location != null) {
+                Defines.log("lat -> ${location.latitude} lng -> ${location.longitude} ${getNowTimeToStr()}")
+                GlobalScope.launch(Dispatchers.IO) {
+
                         //JOB 사이즈 체크
                         val todoRows = mTodoRepository.getAllTodo()
                         if (todoRows.isNotEmpty()) {
@@ -89,19 +122,20 @@ class MyService : Service() {
                                     )
                                 )
                             }
-                            showNotification()
+
                             Defines.log("size->" + mGpsRepository.getAllGpsData().size)
                         } else {
+                            Defines.log("serviceDie->127")
                             stopSelf()
                         }
                     }
-
-                    Defines.log("lat -> ${location.latitude} lng -> ${location.longitude} ${getNowTimeToStr()}")
-                }
+                showNotification()
+            } else {
+                showNotification("miss")
             }
-        }
 
-        this.createLocationRequest()
+            //handler.postDelayed(runnable,INTERVAL_TIME)
+        }
     }
 
     private fun createLocationRequest() {
@@ -115,14 +149,17 @@ class MyService : Service() {
             Toast.makeText(
                 applicationContext, "ACCESS_FINE_LOCATION not permission", Toast.LENGTH_SHORT
             ).show()
+
         } else if (ActivityCompat.checkSelfPermission(
                 applicationContext,
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
+
             Toast.makeText(
                 applicationContext, "ACCESS_COARSE_LOCATION not permission", Toast.LENGTH_SHORT
             ).show()
+
         } else {
 
             val locationRequest = LocationRequest.create().apply {
@@ -135,13 +172,10 @@ class MyService : Service() {
                 .addLocationRequest(locationRequest)
 
             val client: SettingsClient = LocationServices.getSettingsClient(applicationContext)
-            val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder.build())
+            //val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder.build())
 
-            fusedLocationClient.requestLocationUpdates(
-                locationRequest,
-                locationCallback,
-                Looper.getMainLooper()
-            )
+            handler.postDelayed(runnable,INTERVAL_TIME)
+
         }
     }
 
@@ -151,7 +185,7 @@ class MyService : Service() {
         IS_ACTIVITY_RUNNING = false
     }
 
-    private fun showNotification() {
+    private fun showNotification(str : String = "success") {
 
         // Create an explicit intent for an Activity in your app
         val intent = Intent(this, MainActivity::class.java).apply {
@@ -178,7 +212,7 @@ class MyService : Service() {
 
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("위치 정보 저장중!")
+            .setContentTitle("위치 정보 저장중!${str}")
             .setContentText("regDate->${getNowTimeToStr()}")
             // Set the intent that will fire when the user taps the notification
             .setContentIntent(pendingIntent)
@@ -186,11 +220,14 @@ class MyService : Service() {
 
         //알림표시
         startForeground(1, builder.build())
+
+        handler.postDelayed(runnable,INTERVAL_TIME)
     }
 
 
     companion object {
-        const val TAG = "MyGpsService"
+        const val TAG = "MyGpsService2"
+        var INTERVAL_TIME : Long = 60000
         var IS_ACTIVITY_RUNNING  : Boolean = false
     }
 }

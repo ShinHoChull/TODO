@@ -7,7 +7,7 @@ fun getRandNum(from: Int = 0, to: Int = 0) : Int {
     return Random.nextInt(to - from) + from
 }
 
-fun getNowTimeToStr(formatStr : String = "yyyy-MM-dd hh:mm:ss" ) : String {
+fun getNowTimeToStr(formatStr : String = "yyyy-MM-dd HH:mm:ss" ) : String {
     return SimpleDateFormat(formatStr)
         .format(System.currentTimeMillis())
 }

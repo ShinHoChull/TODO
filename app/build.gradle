@@ -79,6 +79,9 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$aac_version"
 
 
+    //worker
+    implementation "androidx.work:work-runtime-ktx:$work_version"
+
     // RxJava
     //implementation "io.reactivex.rxjava3:rxjava:$rxjava_version"
 
