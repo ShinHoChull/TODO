@@ -18,6 +18,7 @@ import com.example.todo.vm.AViewModel
 import com.example.todo.R
 import com.example.todo.a.service.MyService
 import com.example.todo.a.service.MyService2
+import com.example.todo.a.service.MyService3
 
 import com.example.todo.common.Defines
 import com.example.todo.model.domain.Todo
@@ -100,17 +101,17 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
      */
     private fun setUpGPS() {
         GlobalScope.launch(Dispatchers.IO) {
-            if (viewModel.getAllData().isNotEmpty() && !MyService2.IS_ACTIVITY_RUNNING) {
-
-                Defines.log("GPS를 실행합니다.")
-
+            if (viewModel.getAllData().isNotEmpty() && !MyService3.IS_ACTIVITY_RUNNING) {
+                Defines.log("hello?")
                 val intent = Intent(
-                    requireContext(), MyService2::class.java
+                    requireContext(), MyService3::class.java
                 ).apply {
                     putExtra("flag", "start")
                 }
 
                 requireActivity().startService(intent)
+            } else {
+                Defines.log("not hello?")
             }
         }
     }

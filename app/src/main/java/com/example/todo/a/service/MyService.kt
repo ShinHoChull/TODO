@@ -72,29 +72,34 @@ class MyService : Service() {
                 locationResult ?: return
                 for (location in locationResult.locations) {
                     // Update UI with location data
+                    if (location != null) {
+                        GlobalScope.launch(Dispatchers.IO) {
+                            //JOB 사이즈 체크
+                            val todoRows = mTodoRepository.getAllTodo()
+                            if (todoRows.isNotEmpty()) {
+                                for ( i in todoRows.indices ) {
+                                    val todoRow = todoRows[i]
 
-                    GlobalScope.launch(Dispatchers.IO) {
-                        //JOB 사이즈 체크
-                        val todoRows = mTodoRepository.getAllTodo()
-                        if (todoRows.isNotEmpty()) {
-                            for ( i in todoRows.indices ) {
-                                val todoRow = todoRows[i]
-
-                                mGpsRepository.insertGpsData(
-                                    GPS(null
-                                    ,todoRow.id
-                                    , location.latitude
-                                    , location.longitude
-                                    , getNowTimeToStr()
+                                    mGpsRepository.insertGpsData(
+                                        GPS(null
+                                            ,todoRow.id
+                                            , location.latitude
+                                            , location.longitude
+                                            , getNowTimeToStr()
+                                        )
                                     )
-                                )
+                                }
+                                showNotification()
+                                Defines.log("size->" + mGpsRepository.getAllGpsData().size)
+                            } else {
+                                stopSelf()
+                                showNotification("miss")
                             }
-                            showNotification()
-                            Defines.log("size->" + mGpsRepository.getAllGpsData().size)
-                        } else {
-                            stopSelf()
                         }
+                    } else {
+                        showNotification("miss")
                     }
+
 
                     Defines.log("lat -> ${location.latitude} lng -> ${location.longitude} ${getNowTimeToStr()}")
                 }
@@ -126,9 +131,9 @@ class MyService : Service() {
         } else {
 
             val locationRequest = LocationRequest.create().apply {
-                interval = 60000
-                fastestInterval = 60000
-                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                interval = INTERVAL_TIME
+                fastestInterval = INTERVAL_TIME
+                priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
             }
 
             val builder = LocationSettingsRequest.Builder()
@@ -151,7 +156,7 @@ class MyService : Service() {
         IS_ACTIVITY_RUNNING = false
     }
 
-    private fun showNotification() {
+    private fun showNotification(str : String = "success") {
 
         // Create an explicit intent for an Activity in your app
         val intent = Intent(this, MainActivity::class.java).apply {
@@ -178,7 +183,7 @@ class MyService : Service() {
 
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("위치 정보 저장중!")
+            .setContentTitle("위치 정보 저장중!${str}")
             .setContentText("regDate->${getNowTimeToStr()}")
             // Set the intent that will fire when the user taps the notification
             .setContentIntent(pendingIntent)
@@ -191,6 +196,7 @@ class MyService : Service() {
 
     companion object {
         const val TAG = "MyGpsService"
+        var INTERVAL_TIME : Long = 60000
         var IS_ACTIVITY_RUNNING  : Boolean = false
     }
 }

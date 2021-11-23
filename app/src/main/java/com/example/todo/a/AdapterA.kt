@@ -1,6 +1,7 @@
 package com.example.todo.a
 
 import android.content.Context
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -12,6 +13,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
+import com.example.todo.R
 import com.example.todo.a.viewholder.AViewHolder
 import com.example.todo.common.Defines
 import com.example.todo.common.getRandNum
@@ -57,7 +59,7 @@ class AdapterA(
     }
 
     fun delData(position: Int) {
-        var idx = 0;
+        var idx = 0
 
         val ite = this.dataSet.iterator()
         while (ite.hasNext()) {
@@ -84,9 +86,16 @@ class AdapterA(
         }, 100)
     }
 
-    override fun textClick(position: Int) {
+    override fun textClick(v : View , position: Int) {
         val modalBottomSheet = FragmentDialogA()
-        
+        val positionNum : Long  = v.getTag(R.string.clickId) as Long
+
+        Defines.log("positionNum->${positionNum}")
+
+        val args = Bundle()
+        args.putLong("position",positionNum)
+        modalBottomSheet.arguments = args
+
         modalBottomSheet.show(context.supportFragmentManager, ABottomSheet.TAG)
     }
 

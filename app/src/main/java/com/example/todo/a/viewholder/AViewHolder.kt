@@ -6,6 +6,7 @@ import android.widget.CheckBox
 import android.widget.TextView
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
+import com.example.todo.R
 import com.example.todo.common.Defines
 import com.example.todo.common.MsgBox
 import com.example.todo.databinding.ItemAFragmentBinding
@@ -24,7 +25,7 @@ class AViewHolder (
 
     interface onChekBoxListener {
         fun checkChange(isCheck : Boolean ,  position : Int)
-        fun textClick(position : Int)
+        fun textClick( v : View, position : Int)
     }
 
 
@@ -45,8 +46,9 @@ class AViewHolder (
                     , adapterPosition )
             }
 
+            text1.setTag(R.string.clickId,todo.id)
             text1.setOnClickListener{
-                listener.textClick(adapterPosition)
+                listener.textClick(it , adapterPosition)
             }
 
 

@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.graphics.Color
 import android.os.Bundle
 import android.text.Layout
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,6 +18,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import net.daum.mf.map.api.*
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
+import java.lang.NullPointerException
 
 
 class FragmentDialogA : DialogFragment() {
@@ -24,6 +26,7 @@ class FragmentDialogA : DialogFragment() {
 
     val viewModel: AViewModel by sharedViewModel()
     lateinit var mDialogV: View
+    var mIdx : Long = -1L
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,6 +40,15 @@ class FragmentDialogA : DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        if (arguments != null) {
+
+            try {
+                mIdx = requireArguments().getLong("position", -1)
+            } catch (err: NullPointerException) {
+                Defines.log(err.toString())
+            }
+        }
         setUpViewInit()
         setUpMapView()
     }
@@ -50,40 +62,34 @@ class FragmentDialogA : DialogFragment() {
         polyLine.tag = 1000
         polyLine.lineColor = Color.argb(128, 255, 51, 0)
 
-
         GlobalScope.launch(Dispatchers.IO) {
             val rows = viewModel.getAllData()
-            if (rows.isNotEmpty()) {
-                for (i in rows.indices) {
-                    val todoRow = rows[i]
-                    Defines.log("todoRow.id->${todoRow.id!!}")
-                    viewModel.getGpsList(todoRow.id!!).apply {
-                        for (j in this.indices) {
-                            val gpsRow = this[j]
-                            val lat = gpsRow.latDataStr!!
-                            val lng = gpsRow.lngDataStr!!
-                            Defines.log("polyLAT->${lat} , ${lng}")
-                            polyLine.addPoint(
-                                MapPoint.mapPointWithGeoCoord(
-                                    lat, lng
-                                )
+            if (rows.isNotEmpty() && mIdx != -1L) {
+                Defines.log("idx->${mIdx}")
+                viewModel.getGpsList(mIdx).apply {
+                    for (j in this.indices) {
+                        val gpsRow = this[j]
+                        val lat = gpsRow.latDataStr!!
+                        val lng = gpsRow.lngDataStr!!
+                          Defines.log("polyLAT->${gpsRow.regDateStr}")
+                        polyLine.addPoint(
+                            MapPoint.mapPointWithGeoCoord(
+                                lat, lng
                             )
-                        }
+                        )
                     }
+                }
+
+                launch {
+                    mapView.addPolyline(polyLine)
+
+                    val mapPointBounds = MapPointBounds(polyLine.mapPoints)
+                    val padding = 100
+                    mapView.moveCamera(CameraUpdateFactory.newMapPointBounds(mapPointBounds, padding))
                 }
             }
 
-            launch {
-
-                mapView.addPolyline(polyLine)
-
-                val mapPointBounds = MapPointBounds(polyLine.mapPoints)
-                val padding = 100
-                mapView.moveCamera(CameraUpdateFactory.newMapPointBounds(mapPointBounds, padding))
-            }
         }
-
-
     }
 
     private fun setUpViewInit() {
