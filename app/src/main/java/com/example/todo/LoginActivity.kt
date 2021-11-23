@@ -27,7 +27,7 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
         setUpInit()
         setUpListener()
-        setUpAnim()
+        setUpAnim();
     }
 
     private fun setUpInit() {
