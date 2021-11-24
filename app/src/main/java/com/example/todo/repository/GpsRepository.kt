@@ -13,4 +13,6 @@ class GpsRepository(
 
     fun getAllGpsData() : List<GPS> = gpsDao.getAllGpsList()
 
+    fun getGpsOne(id : Long) : GPS? = gpsDao.getGpsOne(id)
+
 }

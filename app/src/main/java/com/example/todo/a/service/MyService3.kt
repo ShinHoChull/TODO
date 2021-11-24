@@ -19,9 +19,7 @@ import androidx.core.app.NotificationCompat
 import com.example.todo.MainActivity
 import com.example.todo.R
 import com.example.todo.a.CurrentLocationComponent
-import com.example.todo.common.Defines
-import com.example.todo.common.MsgBox
-import com.example.todo.common.getNowTimeToStr
+import com.example.todo.common.*
 import com.example.todo.model.domain.GPS
 import com.example.todo.repository.GpsRepository
 import com.example.todo.repository.TodoRepository
@@ -34,6 +32,7 @@ import kotlinx.coroutines.launch
 import net.daum.mf.map.api.MapPoint
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 import org.koin.android.ext.android.inject
+import java.util.*
 
 class MyService3 : Service() {
 
@@ -75,6 +74,7 @@ class MyService3 : Service() {
 
     private fun setUpGPS() {
 
+
         currentLocationComponent = CurrentLocationComponent(applicationContext,
             {
 
@@ -89,6 +89,63 @@ class MyService3 : Service() {
                             for (i in todoRows.indices) {
                                 val todoRow = todoRows[i]
 
+                                val lastRow = mGpsRepository.getGpsOne(todoRow.id!!)
+                                if (lastRow != null) {
+                                    //마지막 저장된 위치
+                                    val lastLat = lastRow.latDataStr!!.toDouble()
+                                    val lastLng = lastRow.lngDataStr!!.toDouble()
+
+                                    Defines.log("최근 데이터 입력 시간 ->${lastRow.regDateStr!!}")
+
+                                    val start = getDateStrToDate(lastRow.regDateStr!!)?.time // 최근 입력된 날짜.
+                                    val end = Date().time //현재 시간
+
+                                    val current = end.minus(start!!)
+
+                                    Defines.log("date -> " + "$start -" +
+                                            "$end = ${current/1000/60}")
+
+                                    //몇번까지 데이터 업데이트가 안되는것을 봐줄건가?
+                                    val lossCount = 3
+
+                                    //허용되는 losstime 가져오기.
+                                    val lossTime = (INTERVAL_TIME/1000/60) * lossCount
+
+                                    Defines.log("lossTime -> $lossTime")
+
+
+                                    val currentMil = DistanceManager
+                                        .getDistance(
+                                            it.latitude
+                                            , it.longitude
+                                            , lastLat
+                                            , lastLng
+                                        )
+
+                                    /*
+                                        최근 입력된 데이터 시간과 현재 시간을 비교하여
+                                        지정시간이 초과되면 입력을 한다?
+
+                                        하지만 입력되는 현재 시간이 지정시간의 초과한 것에 비례하여
+                                         과도하게 먼 거리면 입력하지 않는다.
+
+                                         속도 계산은 어떻게?
+
+                                         걷는건지 이동수단을 이용한지를 비교를??
+                                     */
+
+
+
+
+                                    //현재 위치랑 20m 차이가 안나면 데이터 저장 X (사람일 경우.)
+                                    Defines.log("몇KM? ->${currentMil}")
+                                    // || currentMil > 2000  <- 내일 시간 체크하고 잡기.
+                                    if (currentMil < 5 || currentMil > 3000) {
+                                        return@launch
+                                    }
+                                }
+
+                                Defines.log("insert Data~")
                                 mGpsRepository.insertGpsData(
                                     GPS(
                                         null,
@@ -108,11 +165,12 @@ class MyService3 : Service() {
                 } else {
                     showNotification("miss-111")
                 }
-                handler.postDelayed(runnable, INTERVAL_TIME)
+                //handler.postDelayed(runnable, INTERVAL_TIME)
                 Defines.log("lat->${it.latitude} / lng -> ${it.longitude}")
             },
             {
-                showNotification("miss")
+               // handler.postDelayed(runnable, INTERVAL_TIME)
+                showNotification("miss-115")
                 Defines.log("${it}")
             }
         )
@@ -146,13 +204,16 @@ class MyService3 : Service() {
     }
 
     private val runnable = Runnable {
+
         getCurrentLocation()
+
     }
 
 
     private fun getCurrentLocation() {
-        Defines.log("22222")
+        Defines.log("getCurrentLocation!")
         currentLocationComponent.getCurrentLocation()
+        handler.postDelayed(runnable, INTERVAL_TIME)
     }
 
     override fun onDestroy() {
@@ -203,7 +264,7 @@ class MyService3 : Service() {
 
     companion object {
         const val TAG = "MyGpsService"
-        var INTERVAL_TIME: Long = 60000
+        var INTERVAL_TIME: Long = 30000
         var IS_ACTIVITY_RUNNING: Boolean = false
     }
 }

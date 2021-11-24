@@ -41,7 +41,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        batteryOptimization()
+
         setUpToolbar()
         setUpNavigation()
 
@@ -115,29 +115,7 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
         mNavController.navigateUp()
     }
 
-    private fun batteryOptimization(){
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
-            val alertDialog = AlertDialog.Builder(this)
-                .setTitle("배터리 사용량 최적화 제외")
-                .setMessage("안정적인 어플 사용을 위해서 해당 어플을 \"배터리 사용량 최적화\" 목록에서 제외하는 권한이 필요합니다. 계속하시겠습니까?")
-                .setPositiveButton("예") { dialog, which ->
-                    val intent = Intent()
-                    val packageName = packageName
-                    val pm = getSystemService(POWER_SERVICE) as PowerManager
-                    if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-                        @SuppressLint("BatteryLife")
-                        intent.action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-                        intent.data = Uri.parse("package:$packageName")
-                        startActivity(intent)
-                    }
-                }
-                .setNeutralButton("취소", null)
-                .create()
 
-            alertDialog.show()
-        }
-
-    }
 
 
 
