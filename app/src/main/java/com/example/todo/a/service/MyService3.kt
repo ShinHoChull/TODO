@@ -74,7 +74,6 @@ class MyService3 : Service() {
 
     private fun setUpGPS() {
 
-
         currentLocationComponent = CurrentLocationComponent(applicationContext,
             {
 
@@ -97,71 +96,54 @@ class MyService3 : Service() {
 
                                     Defines.log("최근 데이터 입력 시간 ->${lastRow.regDateStr!!}")
 
-                                    val start = getDateStrToDate(lastRow.regDateStr!!)?.time // 최근 입력된 날짜.
-                                    val end = Date().time //현재 시간
-
-                                    val current = end.minus(start!!)
-
-                                    Defines.log("date -> " + "$start -" +
-                                            "$end = ${current/1000/60}")
-
-                                    //몇번까지 데이터 업데이트가 안되는것을 봐줄건가?
-                                    val lossCount = 3
-
-                                    //허용되는 losstime 가져오기.
-                                    val lossTime = (INTERVAL_TIME/1000/60) * lossCount
-
-                                    Defines.log("lossTime -> $lossTime")
+                                    val gpsA = GpsAccuracyUtil(
+                                        getDateStrToDate(lastRow.regDateStr!!)!!
+                                        , Date()
+                                        ,INTERVAL_TIME.toDouble())
 
 
-                                    val currentMil = DistanceManager
-                                        .getDistance(
-                                            it.latitude
-                                            , it.longitude
-                                            , lastLat
-                                            , lastLng
-                                        )
-
-                                    /*
-                                        최근 입력된 데이터 시간과 현재 시간을 비교하여
-                                        지정시간이 초과되면 입력을 한다?
-
-                                        하지만 입력되는 현재 시간이 지정시간의 초과한 것에 비례하여
-                                         과도하게 먼 거리면 입력하지 않는다.
-
-                                         속도 계산은 어떻게?
-
-                                         걷는건지 이동수단을 이용한지를 비교를??
-                                     */
-
-
-
-
-                                    //현재 위치랑 20m 차이가 안나면 데이터 저장 X (사람일 경우.)
-                                    Defines.log("몇KM? ->${currentMil}")
-                                    // || currentMil > 2000  <- 내일 시간 체크하고 잡기.
-                                    if (currentMil < 5 || currentMil > 3000) {
-                                        return@launch
-                                    }
-                                }
-
-                                Defines.log("insert Data~")
-                                mGpsRepository.insertGpsData(
-                                    GPS(
-                                        null,
-                                        todoRow.id,
-                                        it.latitude,
-                                        it.longitude,
-                                        getNowTimeToStr()
+                                    val currentMil =  gpsA.getDistance(
+                                        it.latitude
+                                        , it.longitude
+                                        , lastLat
+                                        , lastLng
                                     )
-                                )
+
+                                    if (gpsA.isMinMaxMovement()) {
+                                        Defines.log("insert Data~")
+                                        showNotification("등록-거리차이 $currentMil m")
+                                        mGpsRepository.insertGpsData(
+                                            GPS(
+                                                null,
+                                                todoRow.id,
+                                                it.latitude,
+                                                it.longitude,
+                                                getNowTimeToStr()
+                                            )
+                                        )
+                                    }
+                                    else showNotification("미등록-거리차이 $currentMil m")
+
+                                } else {
+                                    showNotification()
+                                    mGpsRepository.insertGpsData(
+                                        GPS(
+                                            null,
+                                            todoRow.id,
+                                            it.latitude,
+                                            it.longitude,
+                                            getNowTimeToStr()
+                                        )
+                                    )
+                                }
                             }
-                            showNotification()
+
                             Defines.log("size->" + mGpsRepository.getAllGpsData().size)
                         } else {
                             showNotification("miss")
                         }
                     }
+
                 } else {
                     showNotification("miss-111")
                 }
@@ -169,7 +151,7 @@ class MyService3 : Service() {
                 Defines.log("lat->${it.latitude} / lng -> ${it.longitude}")
             },
             {
-               // handler.postDelayed(runnable, INTERVAL_TIME)
+                //handler.postDelayed(runnable, INTERVAL_TIME)
                 showNotification("miss-115")
                 Defines.log("${it}")
             }
@@ -211,8 +193,9 @@ class MyService3 : Service() {
 
 
     private fun getCurrentLocation() {
-        Defines.log("getCurrentLocation!")
+        Defines.log("getCurrentLocation!"+ getNowTimeToStr())
         currentLocationComponent.getCurrentLocation()
+        //showNotification()
         handler.postDelayed(runnable, INTERVAL_TIME)
     }
 
@@ -231,6 +214,7 @@ class MyService3 : Service() {
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
+
         val pendingIntent: PendingIntent = PendingIntent
             .getActivity(
                 this, 0, intent, 0
@@ -264,7 +248,7 @@ class MyService3 : Service() {
 
     companion object {
         const val TAG = "MyGpsService"
-        var INTERVAL_TIME: Long = 30000
+        var INTERVAL_TIME: Long = 10000
         var IS_ACTIVITY_RUNNING: Boolean = false
     }
 }

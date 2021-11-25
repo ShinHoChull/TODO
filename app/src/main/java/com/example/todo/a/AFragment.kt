@@ -5,9 +5,11 @@ import android.app.ActivityManager
 import android.app.Application
 import android.content.Intent
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 
 import android.view.*
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.Observer
 import androidx.work.*
 
@@ -108,8 +110,12 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
                 ).apply {
                     putExtra("flag", "start")
                 }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    requireActivity().startForegroundService(intent)
+                } else {
+                    requireActivity().startService(intent)
+                }
 
-                requireActivity().startService(intent)
             } else {
                 Defines.log("not hello?")
             }

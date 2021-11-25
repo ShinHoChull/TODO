@@ -11,6 +11,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
+import android.telephony.TelephonyManager
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.LayoutRes
@@ -28,6 +30,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_a.*
+import java.util.function.Consumer
 
 
 abstract class BaseActivity<B : ViewDataBinding, VM : BaseViewModel>(
@@ -47,26 +50,51 @@ abstract class BaseActivity<B : ViewDataBinding, VM : BaseViewModel>(
         binding.lifecycleOwner = this
 
         if (requestPermissions()) {
-            batteryOptimization()
-        }
+            //batteryOptimization()
+            checkBatteryOptimization {
+                if (it) {
+                    Defines.log("abc")
+                    requestPermissionReadPhone()
 
+                } else {
+                    Defines.log("cbd")
+                }
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        Defines.log("onResume")
-
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_NUMBERS)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            if(Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
+                    == PackageManager.PERMISSION_DENIED
+                ) {
+                    return
+                }
+            }
+            Defines.log("phoneNum-> ${getPhoneNumber()}")
+        }
     }
 
     override fun onPause() {
         super.onPause()
-        Defines.log("onPause")
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Defines.log("onDestroy")
+    }
 
+    private val REQUEST_PERMISSION_READ_PHONE_STATE: Int = 200
+
+    fun requestPermissionReadPhone() {
+        var permissions = arrayOf(Manifest.permission.READ_PHONE_NUMBERS)
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            permissions += arrayOf(Manifest.permission.READ_PHONE_STATE)
+        }
+        ActivityCompat.requestPermissions(this, permissions, REQUEST_PERMISSION_READ_PHONE_STATE);
     }
 
     private fun requestPermissions(): Boolean {
@@ -154,7 +182,28 @@ abstract class BaseActivity<B : ViewDataBinding, VM : BaseViewModel>(
                 Defines.log("요청한 권한을 모두 허용했음.")
 
             }
+            REQUEST_PERMISSION_READ_PHONE_STATE-> {
+                if (grantResults.isNotEmpty()) {
+                    val locationPermissions = grantResults[0] === PackageManager.PERMISSION_GRANTED
+                    if (locationPermissions) {
+                        val phoneNumber = getPhoneNumber()
+                        Defines.log("number : $phoneNumber")
+                    } else {
+                        Defines.log("onRequestPermissionsResult() _ 전화번호 권한 거부")
+
+                        // 이벤트 처리
+                        requestPermissionReadPhone()
+                    }
+                }
+            }
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun getPhoneNumber(): String
+    {
+        var teleManager: TelephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        return teleManager.getLine1Number().toString()
     }
 
     private fun permissionGrant() {
@@ -251,5 +300,41 @@ abstract class BaseActivity<B : ViewDataBinding, VM : BaseViewModel>(
             }
         }
     }
+
+
+    @SuppressLint("BatteryLife", "InlinedApi")
+    private fun checkBatteryOptimization(callback: Consumer<Boolean>) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) { // 버전 체크
+            Log.d("TAG 1", "checkBatteryOptimization: The version is too low to be checked.")
+            callback.accept(true)
+            return
+        }
+        val packageName = application.packageName
+        // since REQUEST_IGNORE_BATTERY_OPTIMIZATIONS is **not** dangerous permission,
+        // but we need to check that app has `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` permission.
+        if (PackageManager.PERMISSION_GRANTED != application.packageManager
+                .checkPermission(
+                    Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                    application.packageName
+                )
+        ) { // 권한 체크
+            Log.d(
+                "TAG2",
+                "checkBatteryOptimization: application hasn't REQUEST_IGNORE_BATTERY_OPTIMIZATIONS permission"
+            )
+            return
+        }
+        val powerManager = application.getSystemService(POWER_SERVICE) as PowerManager
+        val ignoringBatteryOptimizations = powerManager.isIgnoringBatteryOptimizations(packageName)
+        if (ignoringBatteryOptimizations) { // 예외사항에 이미 추가되었는지 확인
+            Log.d("TAG3", "checkBatteryOptimization: Already ignored Battery Optimizations.")
+            callback.accept(true)
+            return
+        }
+        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+        intent.data = Uri.parse(String.format("package:%s", packageName))
+        startActivity(intent)
+    }
+
 
 }

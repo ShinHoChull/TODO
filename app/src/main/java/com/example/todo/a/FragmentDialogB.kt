@@ -52,6 +52,8 @@ class FragmentDialogB : DialogFragment() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
 
+
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -112,8 +114,6 @@ class FragmentDialogB : DialogFragment() {
                 Defines.log("${it}")
             }
         )
-
-
 
         getCurrentLocation()
 
