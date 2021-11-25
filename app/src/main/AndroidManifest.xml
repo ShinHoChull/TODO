@@ -46,6 +46,8 @@
             </intent-filter>
         </service>
 
+        <receiver android:name=".a.recevier.AReceiver"/>
+
         <meta-data
             android:name="com.kakao.sdk.AppKey"
             android:value="93642a814f906d3d427965a2573e9913" />

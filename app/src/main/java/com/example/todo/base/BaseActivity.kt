@@ -38,7 +38,7 @@ abstract class BaseActivity<B : ViewDataBinding, VM : BaseViewModel>(
 ) : AppCompatActivity() {
 
     lateinit var binding: B
-    abstract val viewModel: VM;
+    abstract val viewModel: VM
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
 

@@ -62,9 +62,12 @@ class MyService3 : Service() {
         if (flag.equals("start")) {
 
             Defines.log("GPS 실행합니다.")
-            showNotification()
-            this.setUpGPS()
-            this.createLocationRequest()
+//            showNotification()
+//            this.setUpGPS()
+//            this.createLocationRequest()
+
+
+
         } else {
             Defines.log("error->70")
             stopSelf()
