@@ -123,10 +123,16 @@ abstract class BaseActivity<B : ViewDataBinding, VM : BaseViewModel>(
             }
         }
 
-        val permissions: Array<String> = arrayOf(
+        var permissions: Array<String> = arrayOf(
             Manifest.permission.ACCESS_COARSE_LOCATION
             ,Manifest.permission.ACCESS_FINE_LOCATION
+
         )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            permissions += Manifest.permission.ACTIVITY_RECOGNITION
+        }
+
 
         ActivityCompat.requestPermissions(this, permissions, 0)
 
@@ -203,6 +209,9 @@ abstract class BaseActivity<B : ViewDataBinding, VM : BaseViewModel>(
     fun getPhoneNumber(): String
     {
         var teleManager: TelephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        if (teleManager.getLine1Number() == null) {
+            return ""
+        }
         return teleManager.getLine1Number().toString()
     }
 

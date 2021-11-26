@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
@@ -19,6 +20,7 @@ import androidx.core.app.NotificationCompat
 import com.example.todo.MainActivity
 import com.example.todo.R
 import com.example.todo.a.CurrentLocationComponent
+import com.example.todo.a.recevier.AReceiver
 import com.example.todo.common.*
 import com.example.todo.model.domain.GPS
 import com.example.todo.repository.GpsRepository
@@ -33,8 +35,17 @@ import net.daum.mf.map.api.MapPoint
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 import org.koin.android.ext.android.inject
 import java.util.*
+import android.app.AlarmManager
+import android.app.AlarmManager.AlarmClockInfo
 
-class MyService3 : Service() {
+import androidx.core.app.AlarmManagerCompat
+import android.content.Intent.getIntent
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+
+
+class MyService3 : Service() , SensorEventListener {
 
     val mGpsRepository: GpsRepository by inject()
     val mTodoRepository: TodoRepository by inject()
@@ -61,18 +72,39 @@ class MyService3 : Service() {
 
         if (flag.equals("start")) {
 
-            Defines.log("GPS 실행합니다.")
-//            showNotification()
-//            this.setUpGPS()
-//            this.createLocationRequest()
+            Defines.log("알림을 실행 ..")
 
+            showNotification()
 
+            //this.setUpGPS()
+            //this.createLocationRequest()
+            //getCurrentLocation()
+        } else if (flag.equals("re")){
+            Defines.log("스케줄을 재실행 ..")
+            //showNotification()
+            //getCurrentLocation()
+            scheduleAlarms(applicationContext)
 
         } else {
             Defines.log("error->70")
             stopSelf()
         }
         return START_STICKY
+    }
+
+    fun scheduleAlarms(ctxt: Context) {
+        val mgr = ctxt.getSystemService(ALARM_SERVICE) as AlarmManager
+
+        val i = Intent(ctxt, AReceiver::class.java)
+        val pi = PendingIntent.getBroadcast(ctxt, 0, i, 0)
+
+        val i2 = Intent(ctxt, AReceiver::class.java)
+        val pi2 = PendingIntent.getActivity(ctxt, 0, i2, 0)
+        val ac = AlarmClockInfo(
+            System.currentTimeMillis() + 10000,
+            pi2
+        )
+        mgr.setAlarmClock(ac, pi)
     }
 
     private fun setUpGPS() {
@@ -100,16 +132,14 @@ class MyService3 : Service() {
                                     Defines.log("최근 데이터 입력 시간 ->${lastRow.regDateStr!!}")
 
                                     val gpsA = GpsAccuracyUtil(
-                                        getDateStrToDate(lastRow.regDateStr!!)!!
-                                        , Date()
-                                        ,INTERVAL_TIME.toDouble())
+                                        getDateStrToDate(lastRow.regDateStr!!)!!,
+                                        Date(),
+                                        INTERVAL_TIME.toDouble()
+                                    )
 
 
-                                    val currentMil =  gpsA.getDistance(
-                                        it.latitude
-                                        , it.longitude
-                                        , lastLat
-                                        , lastLng
+                                    val currentMil = gpsA.getDistance(
+                                        it.latitude, it.longitude, lastLat, lastLng
                                     )
 
                                     if (gpsA.isMinMaxMovement()) {
@@ -124,8 +154,24 @@ class MyService3 : Service() {
                                                 getNowTimeToStr()
                                             )
                                         )
+                                    } else  {
+                                        if (gpsA.isTimeDifference()) {
+                                            showNotification("등록-거리차이 $currentMil m timeOver")
+                                            mGpsRepository.insertGpsData(
+                                                GPS(
+                                                    null,
+                                                    todoRow.id,
+                                                    it.latitude,
+                                                    it.longitude,
+                                                    getNowTimeToStr()
+                                                )
+                                            )
+                                        } else {
+                                            showNotification("미등록-거리차이 $currentMil m")
+                                        }
+
+
                                     }
-                                    else showNotification("미등록-거리차이 $currentMil m")
 
                                 } else {
                                     showNotification()
@@ -146,7 +192,6 @@ class MyService3 : Service() {
                             showNotification("miss")
                         }
                     }
-
                 } else {
                     showNotification("miss-111")
                 }
@@ -184,7 +229,8 @@ class MyService3 : Service() {
             ).show()
 
         } else {
-            handler.postDelayed(runnable, INTERVAL_TIME)
+            scheduleAlarms(applicationContext)
+            //handler.postDelayed(runnable, INTERVAL_TIME)
         }
     }
 
@@ -196,17 +242,18 @@ class MyService3 : Service() {
 
 
     private fun getCurrentLocation() {
-        Defines.log("getCurrentLocation!"+ getNowTimeToStr())
+        Defines.log("getCurrentLocation!" + getNowTimeToStr())
         currentLocationComponent.getCurrentLocation()
+
         //showNotification()
-        handler.postDelayed(runnable, INTERVAL_TIME)
+        //handler.postDelayed(runnable, INTERVAL_TIME)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        if (fusedLocationClient != null) {
-            fusedLocationClient.removeLocationUpdates(locationCallback)
-        }
+//        if (fusedLocationClient != null) {
+//            fusedLocationClient.removeLocationUpdates(locationCallback)
+//        }
 
         IS_ACTIVITY_RUNNING = false
     }
@@ -251,7 +298,20 @@ class MyService3 : Service() {
 
     companion object {
         const val TAG = "MyGpsService"
-        var INTERVAL_TIME: Long = 10000
+        var INTERVAL_TIME: Long = 1000 * 10
         var IS_ACTIVITY_RUNNING: Boolean = false
+    }
+
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        if(event?.sensor?.getType() == Sensor.TYPE_STEP_COUNTER) {
+            //Toast.makeText(applicationContext, "sensorChanger->${event.values[0]}", Toast.LENGTH_SHORT).show();
+            Defines.log("sensorChange-> ${event.values[0]}")
+            showNotification("sensorChanger->${event.values[0]}")
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+
     }
 }

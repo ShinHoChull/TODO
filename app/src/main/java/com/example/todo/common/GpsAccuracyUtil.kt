@@ -18,10 +18,10 @@ class GpsAccuracyUtil(
     private var distanceMetre : Int = 0
 
     //최소이동 (Metre)
-    private var minMovement : Int = 2
+    private var minMovement : Int = 4
 
     //최대이동 (Metre)
-    private var maxMovement : Int = 2000
+    private var maxMovement : Int = 1000
 
     private val r = 6372.8 * 1000
 

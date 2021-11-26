@@ -104,12 +104,11 @@ class FragmentDialogA : DialogFragment() {
 //                        )
 //                    )
 
-                    handler.postDelayed(runnable, 5000)
+                    //handler.postDelayed(runnable, 5000)
                 }
             }
         }
     }
-
 
 
     private fun setUpMapView() {
