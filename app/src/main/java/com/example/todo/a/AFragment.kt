@@ -39,13 +39,10 @@ import java.util.concurrent.TimeUnit
 
 class AFragment : BaseFragment<FragmentABinding, AViewModel>(
     R.layout.fragment_a
-) , SensorEventListener {
+)  {
 
     override val viewModel: AViewModel by sharedViewModel()
     private lateinit var mAdapter: AdapterA
-
-    private lateinit var sensorManager : SensorManager
-    private lateinit var stepCountSensor : Sensor
 
 
 
@@ -59,20 +56,8 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
         setUpVal()
         setUpObserver()
         setUpGPS()
-        setUpSensor()
+
         //setUpWorker()
-    }
-
-    private fun setUpSensor() {
-
-        sensorManager = requireActivity().getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        if (sensorManager == null) {
-            Toast.makeText(requireContext(), "noSensorManager Null", Toast.LENGTH_SHORT).show();
-        }
-        stepCountSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
-        if(stepCountSensor == null) {
-            Toast.makeText(requireContext(), "No Step Detect Sensor", Toast.LENGTH_SHORT).show();
-        }
     }
 
 
@@ -122,13 +107,13 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
             }
         }
 
-        sensorManager.registerListener(this, stepCountSensor, SensorManager.SENSOR_DELAY_NORMAL)
+
 
     }
 
     override fun onPause() {
         super.onPause()
-        sensorManager.unregisterListener(this);
+
     }
 
     private fun setUpObserver() {
@@ -140,16 +125,4 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
         }
     }
 
-    override fun onSensorChanged(event: SensorEvent?) {
-
-        if(event?.sensor?.getType() == Sensor.TYPE_STEP_COUNTER) {
-           // Toast.makeText(requireContext(), "sensorChanger->${event.values[0]}", Toast.LENGTH_SHORT).show();
-            Defines.log("sensorChange-> ${event.values[0]}")
-        }
-
-    }
-
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-
-    }
 }

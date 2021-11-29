@@ -17,11 +17,17 @@ class GpsAccuracyUtil(
     //두 지점간의 거리 (Metre)
     private var distanceMetre : Int = 0
 
-    //최소이동 (Metre)
-    private var minMovement : Int = 4
+    //걸음 최소이동 (Metre)
+    private var walkMinMovement : Int = 2
+    //걸음 최대이동 (Metre)
+    private var walkMaxMovement : Int = 200
 
-    //최대이동 (Metre)
-    private var maxMovement : Int = 1000
+    //이동수단 최소이동 (Metre)
+    private var transMinMovement : Int = 5
+
+    //이동수단 최대이동 (Metre)
+    private var transMaxMovement : Int = 2000
+
 
     private val r = 6372.8 * 1000
 
@@ -72,23 +78,57 @@ class GpsAccuracyUtil(
 
     /**
      * 최소 최대로 이동한 경로 체크
-     *  minMovement 보다 이동 하지 않으면 제외.
-     *  maxMovement 보다 많이 이동하면 제외
+     *  walkMinMovement 보다 이동 하지 않으면 제외.
+     *  walkMaxMovement 보다 많이 이동하면 제외
      *
      */
-    fun isMinMaxMovement() : Boolean {
+    fun isWorkMinMaxMovement() : Boolean {
         Defines.log("distance-> $distanceMetre")
-        if ( this.distanceMetre > minMovement && this.distanceMetre < maxMovement ) {
+        if ( this.distanceMetre > walkMinMovement && this.distanceMetre < walkMaxMovement ) {
             return true
         }
         return false
     }
 
-    fun isMinMovement() : Boolean {
-        return (this.distanceMetre < minMovement)
+    /**
+     * 최소 최대로 이동한 경로 체크
+     *  transMinMovement 보다 이동 하지 않으면 제외.
+     *  transMaxMovement 보다 많이 이동하면 제외
+     *
+     */
+    fun isTransMinMaxMovement(): Boolean {
+        Defines.log("distance-> $distanceMetre")
+        if ( this.distanceMetre > transMinMovement && this.distanceMetre < transMaxMovement ) {
+            return true
+        }
+        return false
     }
 
 
+    fun isMinMovement() : Boolean {
+        return (this.distanceMetre < walkMinMovement)
+    }
+
+
+    /**
+     *
+    1. 앱이 실행되면 현재 센서 수치를 저장한다. ( previousStep )
+    2. 00시나 23시 59분에 센서 수치를 한번 더 측정한다. ( currentStep )
+    3. 현재수치에서 저장한 수치를 뺀다 ( currentStep - previousStep ) 여기서 오늘 걸음 수가 나온다. ( todayStep )
+    4. 현재 수치를 다시 저장한다. ( previousStep = currentStep )
+    5. 2~4번을 반복한다.
+     */
+    fun saveWorkingCount(previousStep : Int , currentStep : Int , csp : Custom_SharedPreferences) : Int {
+
+        if (csp.getValue("previousStep",-1) == -1) {
+            //현재 걸음 수치.
+            csp.put("previousStep",previousStep)
+        }
+        val todayWalk = currentStep - csp.getValue("previousStep",0)
+        csp.put("todayStep",todayWalk)
+
+        return todayWalk
+    }
 
 
 }

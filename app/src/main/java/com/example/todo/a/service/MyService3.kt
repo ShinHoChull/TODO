@@ -43,12 +43,16 @@ import android.content.Intent.getIntent
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 
 
-class MyService3 : Service() , SensorEventListener {
+class MyService3 : Service(), SensorEventListener {
 
     val mGpsRepository: GpsRepository by inject()
     val mTodoRepository: TodoRepository by inject()
+
+    private lateinit var sensorManager: SensorManager
+    private lateinit var stepCountSensor: Sensor
 
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -56,7 +60,8 @@ class MyService3 : Service() , SensorEventListener {
 
     private lateinit var currentLocationComponent: CurrentLocationComponent
 
-    private val handler = Handler(Looper.getMainLooper())
+
+    private lateinit var mCsp: Custom_SharedPreferences
 
     override fun onBind(intent: Intent): IBinder {
         TODO("입력을 해주세용 .")
@@ -64,7 +69,21 @@ class MyService3 : Service() , SensorEventListener {
 
     override fun onCreate() {
         super.onCreate()
+
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        if (sensorManager == null) {
+            Toast.makeText(this, "noSensorManager Null", Toast.LENGTH_SHORT).show()
+        }
+        stepCountSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+        if (stepCountSensor == null) {
+            Toast.makeText(this, "No Step Detect Sensor", Toast.LENGTH_SHORT).show()
+        }
+
         IS_ACTIVITY_RUNNING = true
+    }
+
+    private fun setUpCspReset() {
+        mCsp.put("oldStep", -1)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -74,15 +93,23 @@ class MyService3 : Service() , SensorEventListener {
 
             Defines.log("알림을 실행 ..")
 
+
+            mCsp = Custom_SharedPreferences(this)
+            setUpCspReset()
+            sensorManager.registerListener(this, stepCountSensor, SensorManager.SENSOR_DELAY_NORMAL)
+
             showNotification()
 
-            //this.setUpGPS()
-            //this.createLocationRequest()
-            //getCurrentLocation()
-        } else if (flag.equals("re")){
+            this.setUpGPS()
+            this.createLocationRequest()
+            getCurrentLocation()
+            scheduleAlarms(applicationContext)
+
+        } else if (flag.equals("re")) {
             Defines.log("스케줄을 재실행 ..")
-            //showNotification()
-            //getCurrentLocation()
+
+            //showNotification("현재 걸음 -> ${mCsp.getValue("todayStep",0)}")
+            getCurrentLocation()
             scheduleAlarms(applicationContext)
 
         } else {
@@ -101,7 +128,7 @@ class MyService3 : Service() , SensorEventListener {
         val i2 = Intent(ctxt, AReceiver::class.java)
         val pi2 = PendingIntent.getActivity(ctxt, 0, i2, 0)
         val ac = AlarmClockInfo(
-            System.currentTimeMillis() + 10000,
+            System.currentTimeMillis() + INTERVAL_TIME,
             pi2
         )
         mgr.setAlarmClock(ac, pi)
@@ -137,26 +164,24 @@ class MyService3 : Service() , SensorEventListener {
                                         INTERVAL_TIME.toDouble()
                                     )
 
-
                                     val currentMil = gpsA.getDistance(
                                         it.latitude, it.longitude, lastLat, lastLng
                                     )
 
-                                    if (gpsA.isMinMaxMovement()) {
-                                        Defines.log("insert Data~")
-                                        showNotification("등록-거리차이 $currentMil m")
-                                        mGpsRepository.insertGpsData(
-                                            GPS(
-                                                null,
-                                                todoRow.id,
-                                                it.latitude,
-                                                it.longitude,
-                                                getNowTimeToStr()
-                                            )
-                                        )
-                                    } else  {
-                                        if (gpsA.isTimeDifference()) {
-                                            showNotification("등록-거리차이 $currentMil m timeOver")
+                                    val oldStep = mCsp.getValue("oldStep", -1)
+                                    val todayStep = mCsp.getValue("todayStep", -1)
+                                    if (oldStep == -1) {
+                                        mCsp.put("oldStep", todayStep)
+                                    }
+
+                                    //걸어가고있나?
+                                    if (todayStep > oldStep) {
+                                        //걸음 동기화
+                                        mCsp.put("oldStep",todayStep)
+
+                                        if (gpsA.isWorkMinMaxMovement()) {
+                                            Defines.log("insert Data~")
+                                            showNotification("등록-walk $currentMil m / $todayStep")
                                             mGpsRepository.insertGpsData(
                                                 GPS(
                                                     null,
@@ -167,10 +192,55 @@ class MyService3 : Service() , SensorEventListener {
                                                 )
                                             )
                                         } else {
-                                            showNotification("미등록-거리차이 $currentMil m")
+
+                                            //허용 시간이 지나면 등록
+                                            if (gpsA.isTimeDifference()) {
+                                                showNotification("등록-walk $currentMil m timeOver")
+                                                mGpsRepository.insertGpsData(
+                                                    GPS(
+                                                        null,
+                                                        todoRow.id,
+                                                        it.latitude,
+                                                        it.longitude,
+                                                        getNowTimeToStr()
+                                                    )
+                                                )
+                                            } else {
+                                                showNotification("미등록-walk $currentMil m / 걸음$todayStep 보")
+                                           }
                                         }
 
+                                    } else { // 이동수단을 이용하나?
+                                        if (gpsA.isTransMinMaxMovement()) {
+                                            Defines.log("insert Data~")
+                                            showNotification("등록-trans $currentMil m / 걸음$todayStep 보 ")
+                                            mGpsRepository.insertGpsData(
+                                                GPS(
+                                                    null,
+                                                    todoRow.id,
+                                                    it.latitude,
+                                                    it.longitude,
+                                                    getNowTimeToStr()
+                                                )
+                                            )
+                                        } else {
 
+                                            //허용 시간이 지나면 등록
+                                            if (gpsA.isTimeDifference()) {
+                                                showNotification("등록-trans $currentMil m timeOver")
+                                                mGpsRepository.insertGpsData(
+                                                    GPS(
+                                                        null,
+                                                        todoRow.id,
+                                                        it.latitude,
+                                                        it.longitude,
+                                                        getNowTimeToStr()
+                                                    )
+                                                )
+                                            } else {
+                                                showNotification("미등록-trans $currentMil m")
+                                            }
+                                        }
                                     }
 
                                 } else {
@@ -254,7 +324,7 @@ class MyService3 : Service() , SensorEventListener {
 //        if (fusedLocationClient != null) {
 //            fusedLocationClient.removeLocationUpdates(locationCallback)
 //        }
-
+        sensorManager.unregisterListener(this);
         IS_ACTIVITY_RUNNING = false
     }
 
@@ -285,7 +355,7 @@ class MyService3 : Service() , SensorEventListener {
 
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("위치 정보 저장중!${str}")
+            .setContentTitle("위치 정보 ${str}")
             .setContentText("regDate->${getNowTimeToStr()}")
             // Set the intent that will fire when the user taps the notification
             .setContentIntent(pendingIntent)
@@ -304,14 +374,35 @@ class MyService3 : Service() , SensorEventListener {
 
 
     override fun onSensorChanged(event: SensorEvent?) {
-        if(event?.sensor?.getType() == Sensor.TYPE_STEP_COUNTER) {
+        if (event?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
             //Toast.makeText(applicationContext, "sensorChanger->${event.values[0]}", Toast.LENGTH_SHORT).show();
-            Defines.log("sensorChange-> ${event.values[0]}")
-            showNotification("sensorChanger->${event.values[0]}")
+            Defines.log("걸음-> ${event.values[0]}")
+            saveWorkingCount(event.values[0].toInt(), event.values[0].toInt())
+            //showNotification("걸음->${saveWorkingCount(event.values[0].toInt() , event.values[0].toInt())}")
         }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
 
     }
+
+    /**
+     *
+    1. 앱이 실행되면 현재 센서 수치를 저장한다. ( previousStep )
+    2. 00시나 23시 59분에 센서 수치를 한번 더 측정한다. ( currentStep )
+    3. 현재수치에서 저장한 수치를 뺀다 ( currentStep - previousStep ) 여기서 오늘 걸음 수가 나온다. ( todayStep )
+    4. 현재 수치를 다시 저장한다. ( previousStep = currentStep )
+     */
+    private fun saveWorkingCount(previousStep: Int, currentStep: Int): Int {
+
+        if (mCsp.getValue("previousStep", -1) == -1) {
+            //현재 걸음 수치.
+            mCsp.put("previousStep", previousStep)
+        }
+        val todayWalk = currentStep - mCsp.getValue("previousStep", 0)
+        mCsp.put("todayStep", todayWalk)
+
+        return todayWalk
+    }
+
 }
