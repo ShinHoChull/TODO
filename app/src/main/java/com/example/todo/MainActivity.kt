@@ -34,13 +34,12 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
 ) {
 
     private lateinit var mNavController: NavController
-    private lateinit var mToolbar: Toolbar;
+    private lateinit var mToolbar: Toolbar
 
     override val viewModel: AViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
 
         setUpToolbar()
         setUpNavigation()
@@ -89,7 +88,6 @@ class MainActivity : BaseActivity<ActivityMainBinding, AViewModel>(
         }
 
         R.id.success -> {
-
             true
         }
 

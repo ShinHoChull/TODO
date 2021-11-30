@@ -1,5 +1,6 @@
 package com.example.todo.a
 
+import android.Manifest
 import android.app.Activity
 import android.app.ActivityManager
 import android.app.Application
@@ -30,6 +31,8 @@ import com.example.todo.a.service.MyService3
 
 import com.example.todo.common.Defines
 import com.example.todo.model.domain.Todo
+import com.gun0912.tedpermission.PermissionListener
+import com.gun0912.tedpermission.TedPermission
 import kotlinx.android.synthetic.main.fragment_a.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -42,9 +45,7 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
 )  {
 
     override val viewModel: AViewModel by sharedViewModel()
-    private lateinit var mAdapter: AdapterA
-
-
+    private lateinit var mAdapter: AdapterA;
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -55,9 +56,47 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
     private fun init() {
         setUpVal()
         setUpObserver()
-        setUpGPS()
+        //setUpGPS()
 
         //setUpWorker()
+        join_button.setOnClickListener {
+            phoneCheckPermission()
+        }
+    }
+
+    fun phoneCheckPermission() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            TedPermission.with(requireContext())
+                .setPermissionListener(phoneListener)
+                .setRationaleMessage("기기의 전화번호가 필요합니다.")
+                .setDeniedMessage("앱에서 요구하는 권한설정이 필요합니다.\n [설정] > [권한] 에서 사용으로 활성화해주세요.")
+                .setPermissions(
+                    Manifest.permission.READ_PHONE_STATE,
+                    Manifest.permission.READ_PHONE_NUMBERS,
+
+                    ).check()
+        } else {
+            TedPermission.with(requireContext())
+                .setPermissionListener(phoneListener)
+                .setRationaleMessage("기기의 전화번호가 필요합니다.")
+                .setDeniedMessage("앱에서 요구하는 권한설정이 필요합니다.\n [설정] > [권한] 에서 사용으로 활성화해주세요.")
+                .setPermissions(
+                    Manifest.permission.READ_PHONE_STATE
+                    ).check()
+        }
+    }
+
+    val phoneListener : PermissionListener = object: PermissionListener {
+        override fun onPermissionGranted() {
+            Defines.log("권한 허용함.")
+
+        }
+
+        override fun onPermissionDenied(deniedPermissions: MutableList<String>?) {
+            Defines.log("권한 허용하지 않았음 전화번호 없이 회원가입 실행....")
+
+        }
     }
 
 
@@ -106,9 +145,6 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
                 mAdapter.setData(arr)
             }
         }
-
-
-
     }
 
     override fun onPause() {

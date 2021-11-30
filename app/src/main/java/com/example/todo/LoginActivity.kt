@@ -27,7 +27,7 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
         setUpInit()
         setUpListener()
-        setUpAnim();
+        setUpAnim()
     }
 
     private fun setUpInit() {
@@ -58,8 +58,6 @@ class LoginActivity : AppCompatActivity() {
             //로그인 필요
             Defines.log("로그인 필요합니다!...")
         }
-
-
     }
 
     private fun setUpAnim() {
@@ -131,7 +129,6 @@ class LoginActivity : AppCompatActivity() {
                     mCsp.put("kakaoEmail",user.kakaoAccount?.email)
 
                 }
-
             }
         }
     }

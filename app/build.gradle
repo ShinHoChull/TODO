@@ -98,6 +98,9 @@ dependencies {
 
     testImplementation "org.koin:koin-test:$koin_version"
 
+    //TedPermission
+    implementation 'gun0912.ted:tedpermission:2.2.2'
+
     //room
     implementation "androidx.room:room-runtime:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
