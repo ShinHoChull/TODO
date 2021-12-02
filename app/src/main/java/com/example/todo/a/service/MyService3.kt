@@ -93,7 +93,6 @@ class MyService3 : Service(), SensorEventListener {
 
             Defines.log("알림을 실행 ..")
 
-
             mCsp = Custom_SharedPreferences(this)
             setUpCspReset()
             sensorManager.registerListener(this, stepCountSensor, SensorManager.SENSOR_DELAY_NORMAL)
