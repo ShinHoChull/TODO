@@ -195,7 +195,6 @@ class FragmentDialogB : DialogFragment() {
 //                Looper.getMainLooper()
 //            )
         }
-
     }
 
     private fun setUpViewInit() {
@@ -205,8 +204,6 @@ class FragmentDialogB : DialogFragment() {
             )
         }
     }
-
-
 
     private lateinit var currentLocationComponent: CurrentLocationComponent
     private fun getCurrentLocation() {

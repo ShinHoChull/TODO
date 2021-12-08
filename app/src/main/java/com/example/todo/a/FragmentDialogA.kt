@@ -30,6 +30,7 @@ class FragmentDialogA : DialogFragment() {
     val viewModel: AViewModel by sharedViewModel()
     lateinit var mDialogV: View
     var mIdx: Long = -1L
+
     private lateinit var mapView: MapView
     private lateinit var polyLine: MapPolyline
 
@@ -76,6 +77,25 @@ class FragmentDialogA : DialogFragment() {
 
         GlobalScope.launch(Dispatchers.IO) {
             val rows = viewModel.getAllData()
+
+            /*
+            1. 1번 위치와 2번 위치 .
+             -이동 거리를 구한다.
+             -이동시간 / 평균속도를 구한다.
+
+
+
+            2. 2번 위치와 3번 위치
+             -이동 거리를 구한다.
+             -이동시간 / 평균속도를 구한다.
+
+             예외) 2번 3번 위치 차이가 1번 과 차이가 많이 난다면
+                이동시간 체크와 평균속도 차이를 정한다.
+
+             */
+
+            //
+
             if (rows.isNotEmpty() && mIdx != -1L) {
                 Defines.log("idx->${mIdx}")
                 viewModel.getGpsList(mIdx).apply {
@@ -95,14 +115,14 @@ class FragmentDialogA : DialogFragment() {
                 launch {
                     mapView.addPolyline(polyLine)
 
-//                    val mapPointBounds = MapPointBounds(polyLine.mapPoints)
-//                    val padding = 100
-//                    mapView.moveCamera(
-//                        CameraUpdateFactory.newMapPointBounds(
-//                            mapPointBounds,
-//                            padding
-//                        )
-//                    )
+                    val mapPointBounds = MapPointBounds(polyLine.mapPoints)
+                    val padding = 100
+                    mapView.moveCamera(
+                        CameraUpdateFactory.newMapPointBounds(
+                            mapPointBounds,
+                            padding
+                        )
+                    )
 
                     //handler.postDelayed(runnable, 5000)
                 }
@@ -117,9 +137,11 @@ class FragmentDialogA : DialogFragment() {
         mapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(37.5662079, 126.8343948), true);
         map_view.addView(mapView)
 
+
+
         polyLine = MapPolyline()
         polyLine.tag = 1000
-        polyLine.lineColor = Color.argb(128, 255, 51, 0)
+        polyLine.lineColor = Color.argb(100, 255, 51, 0)
 
         this.polyLineSetUp()
     }

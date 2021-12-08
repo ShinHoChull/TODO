@@ -44,24 +44,26 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.location.Location
+import android.util.Log
+import com.example.todo.a.recevier.ActivityRecognitionReceiver
 
 
-class MyService3 : Service(), SensorEventListener {
+class MyService3 : Service() {
 
     val mGpsRepository: GpsRepository by inject()
     val mTodoRepository: TodoRepository by inject()
 
-    private lateinit var sensorManager: SensorManager
-    private lateinit var stepCountSensor: Sensor
-
-
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationCallback: LocationCallback
-
     private lateinit var currentLocationComponent: CurrentLocationComponent
-
+    private lateinit var locationCallback: LocationCallback
+    lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private lateinit var mCsp: Custom_SharedPreferences
+
+    val transitions = mutableListOf<ActivityTransition>()
+    private val TRANSITIONS_RECEIVER_ACTION = "1"
+
+    var lastLocation : Location? = null
 
     override fun onBind(intent: Intent): IBinder {
         TODO("입력을 해주세용 .")
@@ -70,16 +72,139 @@ class MyService3 : Service(), SensorEventListener {
     override fun onCreate() {
         super.onCreate()
 
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        if (sensorManager == null) {
-            Toast.makeText(this, "noSensorManager Null", Toast.LENGTH_SHORT).show()
-        }
-        stepCountSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
-        if (stepCountSensor == null) {
-            Toast.makeText(this, "No Step Detect Sensor", Toast.LENGTH_SHORT).show()
-        }
+
+        mCsp = Custom_SharedPreferences(this)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        //백그라운드에서 단독으로 수행할 GPS
+        this.setUpLocationCallBack()
+        this.startLocationUpdates()
+
+
 
         IS_ACTIVITY_RUNNING = true
+    }
+
+    private fun setUpLocationCallBack() {
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult?) {
+                locationResult ?: return
+                for (location in locationResult.locations) {
+                    // Update UI with location data
+                    Defines.log("단독으로 수행하는 GPS->${location.latitude} / ${location.longitude} ")
+                }
+            }
+        }
+    }
+
+    fun createLocationRequestSetup() : LocationRequest {
+        return LocationRequest.create().apply {
+            interval = 1000 * 10
+            fastestInterval = 5000
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+    }
+
+    private fun startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+
+            return
+        }
+        fusedLocationClient.requestLocationUpdates(
+            createLocationRequestSetup(),
+            locationCallback,
+            Looper.getMainLooper())
+    }
+
+    private fun setUpTrans() {
+
+
+//        //자동차
+//        transitions +=
+//            ActivityTransition.Builder()
+//                .setActivityType(DetectedActivity.IN_VEHICLE)
+//                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+//                .build()
+//
+//        //자전
+//        transitions +=
+//            ActivityTransition.Builder()
+//                .setActivityType(DetectedActivity.ON_BICYCLE)
+//                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+//                .build()
+//
+//        //달리기
+//        transitions +=
+//            ActivityTransition.Builder()
+//                .setActivityType(DetectedActivity.ON_FOOT)
+//                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+//                .build()
+
+        //걷기
+        transitions +=
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.WALKING)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                .build()
+
+        transitions +=
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.WALKING)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                .build()
+
+        transitions +=
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.STILL)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                .build()
+
+        transitions +=
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.STILL)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                .build()
+
+
+        val request = ActivityTransitionRequest(transitions)
+
+        // myPendingIntent is the instance of PendingIntent where the app receives callbacks.
+        val i2 = Intent(applicationContext, ActivityRecognitionReceiver::class.java)
+        val pi2 = PendingIntent.getBroadcast(applicationContext, 0, i2, 0)
+        val receiver = ActivityRecognitionReceiver()
+
+        registerReceiver(receiver , IntentFilter(TRANSITIONS_RECEIVER_ACTION))
+
+
+        if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ) {
+            if (ActivityCompat.checkSelfPermission(
+                    applicationContext,
+                    Manifest.permission.ACTIVITY_RECOGNITION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+
+                val task = ActivityRecognition.getClient(applicationContext)
+                    .requestActivityTransitionUpdates(request, pi2)
+
+                task.addOnSuccessListener {
+                    // Handle success
+                    Defines.log("Transitions API was successfully registered")
+                    showNotification("Transitions API was successfully registered")
+                }
+
+                task.addOnFailureListener { e: Exception ->
+                    // Handle error
+                    Defines.log("recognition fail ${e.message.toString()}")
+                    showNotification("Transitions API was Fail registered")
+                }
+            }
+        }
     }
 
     private fun setUpCspReset() {
@@ -92,17 +217,14 @@ class MyService3 : Service(), SensorEventListener {
         if (flag.equals("start")) {
 
             Defines.log("알림을 실행 ..")
+            setUpTrans()
 
-            mCsp = Custom_SharedPreferences(this)
-            setUpCspReset()
-            sensorManager.registerListener(this, stepCountSensor, SensorManager.SENSOR_DELAY_NORMAL)
-
-            showNotification()
-
+            //setUpCspReset()
+            this.showNotification()
             this.setUpGPS()
             this.createLocationRequest()
-            getCurrentLocation()
-            scheduleAlarms(applicationContext)
+            this.getCurrentLocation()
+            //scheduleAlarms(applicationContext)
 
         } else if (flag.equals("re")) {
             Defines.log("스케줄을 재실행 ..")
@@ -111,10 +233,13 @@ class MyService3 : Service(), SensorEventListener {
             getCurrentLocation()
             scheduleAlarms(applicationContext)
 
-        } else {
+        } else if (flag.equals("recognition")) {
+            showNotification("recognition gogo!!")
+        }else {
             Defines.log("error->70")
             stopSelf()
         }
+
         return START_STICKY
     }
 
@@ -137,6 +262,29 @@ class MyService3 : Service(), SensorEventListener {
 
         currentLocationComponent = CurrentLocationComponent(applicationContext,
             {
+
+//                if (lastLocation != null) {
+//
+//
+//                    //시간간격
+//                    val deltaTime = (it.time - lastLocation!!.time) / 1000.0;
+//
+//                    //속도 계산
+//                    val speed = lastLocation!!.distanceTo(it) / deltaTime;
+//
+//                    //거리간격
+//                    val geri = lastLocation!!.distanceTo(it)
+//
+//                    Defines.log("${String.format("%.1f",geri)} m /" +
+//                            " ${String.format("%.1f", speed)} km / ${String.format("%.1f",deltaTime)} ")
+//
+//                    showNotification("${String.format("%.1f",geri)} m /" +
+//                            " ${String.format("%.1f", speed)} km / ${String.format("%.1f",deltaTime)} ")
+//
+//
+//                }
+//
+//                lastLocation = it
 
                 if (it != null) {
 
@@ -275,6 +423,8 @@ class MyService3 : Service(), SensorEventListener {
         )
     }
 
+
+
     private fun createLocationRequest() {
 
         if (ActivityCompat.checkSelfPermission(
@@ -299,16 +449,8 @@ class MyService3 : Service(), SensorEventListener {
 
         } else {
             scheduleAlarms(applicationContext)
-            //handler.postDelayed(runnable, INTERVAL_TIME)
         }
     }
-
-    private val runnable = Runnable {
-
-        getCurrentLocation()
-
-    }
-
 
     private fun getCurrentLocation() {
         Defines.log("getCurrentLocation!" + getNowTimeToStr())
@@ -323,7 +465,7 @@ class MyService3 : Service(), SensorEventListener {
 //        if (fusedLocationClient != null) {
 //            fusedLocationClient.removeLocationUpdates(locationCallback)
 //        }
-        sensorManager.unregisterListener(this);
+
         IS_ACTIVITY_RUNNING = false
     }
 
@@ -354,7 +496,7 @@ class MyService3 : Service(), SensorEventListener {
 
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("위치 정보 ${str}")
+            .setContentTitle(str)
             .setContentText("regDate->${getNowTimeToStr()}")
             // Set the intent that will fire when the user taps the notification
             .setContentIntent(pendingIntent)
@@ -367,23 +509,10 @@ class MyService3 : Service(), SensorEventListener {
 
     companion object {
         const val TAG = "MyGpsService"
-        var INTERVAL_TIME: Long = 1000 * 10
+        var INTERVAL_TIME: Long = 1000 * 60
         var IS_ACTIVITY_RUNNING: Boolean = false
     }
 
-
-    override fun onSensorChanged(event: SensorEvent?) {
-        if (event?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
-            //Toast.makeText(applicationContext, "sensorChanger->${event.values[0]}", Toast.LENGTH_SHORT).show();
-            Defines.log("걸음-> ${event.values[0]}")
-            saveWorkingCount(event.values[0].toInt(), event.values[0].toInt())
-            //showNotification("걸음->${saveWorkingCount(event.values[0].toInt() , event.values[0].toInt())}")
-        }
-    }
-
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-
-    }
 
     /**
      *
