@@ -22,6 +22,14 @@ import kotlinx.coroutines.launch
 import net.daum.mf.map.api.*
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 import java.lang.NullPointerException
+import net.daum.mf.map.api.MapPOIItem
+import net.daum.mf.map.api.MapPoint
+
+
+
+
+
+
 
 
 class FragmentDialogA : DialogFragment() {
@@ -35,12 +43,14 @@ class FragmentDialogA : DialogFragment() {
     private lateinit var polyLine: MapPolyline
 
     private val handler = Handler(Looper.getMainLooper())
+    private var viewGroup : ViewGroup? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        viewGroup = container
         mDialogV = inflater.inflate(R.layout.fragment_dialog_a, container, false)
         return mDialogV
     }
@@ -83,8 +93,6 @@ class FragmentDialogA : DialogFragment() {
              -이동 거리를 구한다.
              -이동시간 / 평균속도를 구한다.
 
-
-
             2. 2번 위치와 3번 위치
              -이동 거리를 구한다.
              -이동시간 / 평균속도를 구한다.
@@ -93,7 +101,6 @@ class FragmentDialogA : DialogFragment() {
                 이동시간 체크와 평균속도 차이를 정한다.
 
              */
-
             //
 
             if (rows.isNotEmpty() && mIdx != -1L) {
@@ -109,6 +116,22 @@ class FragmentDialogA : DialogFragment() {
                                 lat, lng
                             )
                         )
+
+                        val marker = MapPOIItem()
+                        marker.itemName = "aa"
+                        marker.tag = 0
+                        marker.mapPoint = MapPoint.mapPointWithGeoCoord(lat, lng)
+                        marker.markerType = MapPOIItem.MarkerType.BluePin
+
+                        val inflate  = LayoutInflater.from(requireContext())
+                        val view = inflate.inflate(R.layout.item_map_point,
+                            this@FragmentDialogA.viewGroup, false)
+                        //marker.customCalloutBalloon = view
+                       //marker.customImageResourceId = R.drawable.ic_remove
+
+
+
+                        mapView.addPOIItem(marker)
                     }
                 }
 

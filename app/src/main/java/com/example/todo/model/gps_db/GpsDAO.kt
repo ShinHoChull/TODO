@@ -11,7 +11,7 @@ interface GpsDAO {
     @Query("select * from GPS")
     fun getAllGpsList() : List<GPS>
 
-    @Query("Select * from GPS where todo_num = :id order by reg_date ASC")
+    @Query("Select * from GPS where todo_num = :id group by lat,lng order by reg_date ASC")
     fun getGpsList(id : Long) : List<GPS>
 
     @Query("select * from GPS where todo_num = :id order by reg_date DESC limit 1")
