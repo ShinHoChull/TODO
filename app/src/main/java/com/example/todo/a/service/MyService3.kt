@@ -46,9 +46,8 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.location.Location
 import android.util.Log
+import com.example.todo.a.TransitionsHelper
 import com.example.todo.a.recevier.ActivityRecognitionReceiver
-
-
 
 
 class MyService3 : Service() {
@@ -62,12 +61,12 @@ class MyService3 : Service() {
 
     private lateinit var mCsp: Custom_SharedPreferences
 
-    val transitions = mutableListOf<ActivityTransition>()
     private val TRANSITIONS_RECEIVER_ACTION = "1"
 
     var lastLocation : Location? = null
     var eventStr : String = ""
 
+    lateinit var mTransitionsHelper: TransitionsHelper
 
     override fun onBind(intent: Intent): IBinder {
         TODO("입력을 해주세용 .")
@@ -76,16 +75,31 @@ class MyService3 : Service() {
     override fun onCreate() {
         super.onCreate()
 
-
         mCsp = Custom_SharedPreferences(this)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        mTransitionsHelper = TransitionsHelper(applicationContext)
+
         //백그라운드에서 단독으로 수행할 GPS
         this.setUpLocationCallBack()
         this.startLocationUpdates()
 
-
+        setUpTransitionHelper()
 
         IS_ACTIVITY_RUNNING = true
+    }
+
+    private fun setUpTransitionHelper() {
+        mTransitionsHelper.callReceiver()
+
+        mTransitionsHelper.setCallBackListener(object : TransitionsHelper.CallBackListener {
+            override fun successfulListener(msg: String) {
+                showNotification(msg)
+            }
+
+            override fun failListener(msg: String) {
+                showNotification(msg)
+            }
+        })
     }
 
     private fun setUpLocationCallBack() {
@@ -100,15 +114,16 @@ class MyService3 : Service() {
         }
     }
 
-    fun createLocationRequestSetup() : LocationRequest {
+    private fun createLocationRequestSetup() : LocationRequest {
         return LocationRequest.create().apply {
-            interval = 1000 * 10
+            interval = 1000 * 20
             fastestInterval = 5000
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
     }
 
     private fun startLocationUpdates() {
+
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -117,118 +132,15 @@ class MyService3 : Service() {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-
             return
         }
+
         fusedLocationClient.requestLocationUpdates(
             createLocationRequestSetup(),
             locationCallback,
             Looper.getMainLooper())
     }
 
-    private fun setUpTrans() {
-
-
-        //자동차
-        transitions +=
-            ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.IN_VEHICLE)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                .build()
-
-        transitions +=
-            ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.IN_VEHICLE)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
-                .build()
-
-        //자전
-        transitions +=
-            ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.ON_BICYCLE)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                .build()
-
-        transitions +=
-            ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.ON_BICYCLE)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
-                .build()
-
-        //달리기
-        transitions +=
-            ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.ON_FOOT)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                .build()
-
-        //달리기
-        transitions +=
-            ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.ON_FOOT)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
-                .build()
-
-        //걷기
-        transitions +=
-            ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.WALKING)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                .build()
-
-        transitions +=
-            ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.WALKING)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
-                .build()
-        //휴식..
-        transitions +=
-            ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.STILL)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-                .build()
-
-        transitions +=
-            ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.STILL)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
-                .build()
-
-
-        val request = ActivityTransitionRequest(transitions)
-
-        // myPendingIntent is the instance of PendingIntent where the app receives callbacks.
-        val i2 = Intent(applicationContext, ActivityRecognitionReceiver::class.java)
-        val pi2 = PendingIntent.getBroadcast(applicationContext, 0, i2, 0)
-        val receiver = ActivityRecognitionReceiver()
-
-        registerReceiver(receiver , IntentFilter(TRANSITIONS_RECEIVER_ACTION))
-
-
-        if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ) {
-            if (ActivityCompat.checkSelfPermission(
-                    applicationContext,
-                    Manifest.permission.ACTIVITY_RECOGNITION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-
-                val task = ActivityRecognition.getClient(applicationContext)
-                    .requestActivityTransitionUpdates(request, pi2)
-
-                task.addOnSuccessListener {
-                    // Handle success
-                    Defines.log("Transitions API was successfully registered")
-                    showNotification("Transitions API was successfully registered")
-                }
-
-                task.addOnFailureListener { e: Exception ->
-                    // Handle error
-                    Defines.log("recognition fail ${e.message.toString()}")
-                    showNotification("Transitions API was Fail registered")
-                }
-            }
-        }
-    }
 
     private fun setUpCspReset() {
         mCsp.put("oldStep", -1)
@@ -241,7 +153,6 @@ class MyService3 : Service() {
         if (flag.equals("start")) {
 
             Defines.log("알림을 실행 ..")
-            setUpTrans()
 
             //setUpCspReset()
             this.showNotification()
@@ -271,7 +182,7 @@ class MyService3 : Service() {
         return START_STICKY
     }
 
-    fun scheduleAlarms(ctxt: Context) {
+    private fun scheduleAlarms(ctxt: Context) {
         val mgr = ctxt.getSystemService(ALARM_SERVICE) as AlarmManager
 
         val i = Intent(ctxt, AReceiver::class.java)
