@@ -137,8 +137,6 @@ class FragmentDialogA : DialogFragment() {
         mapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(37.5662079, 126.8343948), true);
         map_view.addView(mapView)
 
-
-
         polyLine = MapPolyline()
         polyLine.tag = 1000
         polyLine.lineColor = Color.argb(100, 255, 51, 0)

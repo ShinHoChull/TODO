@@ -49,6 +49,8 @@ import android.util.Log
 import com.example.todo.a.recevier.ActivityRecognitionReceiver
 
 
+
+
 class MyService3 : Service() {
 
     val mGpsRepository: GpsRepository by inject()
@@ -64,6 +66,8 @@ class MyService3 : Service() {
     private val TRANSITIONS_RECEIVER_ACTION = "1"
 
     var lastLocation : Location? = null
+    var eventStr : String = ""
+
 
     override fun onBind(intent: Intent): IBinder {
         TODO("입력을 해주세용 .")
@@ -125,26 +129,45 @@ class MyService3 : Service() {
     private fun setUpTrans() {
 
 
-//        //자동차
-//        transitions +=
-//            ActivityTransition.Builder()
-//                .setActivityType(DetectedActivity.IN_VEHICLE)
-//                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-//                .build()
-//
-//        //자전
-//        transitions +=
-//            ActivityTransition.Builder()
-//                .setActivityType(DetectedActivity.ON_BICYCLE)
-//                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-//                .build()
-//
-//        //달리기
-//        transitions +=
-//            ActivityTransition.Builder()
-//                .setActivityType(DetectedActivity.ON_FOOT)
-//                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
-//                .build()
+        //자동차
+        transitions +=
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.IN_VEHICLE)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                .build()
+
+        transitions +=
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.IN_VEHICLE)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                .build()
+
+        //자전
+        transitions +=
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.ON_BICYCLE)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                .build()
+
+        transitions +=
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.ON_BICYCLE)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                .build()
+
+        //달리기
+        transitions +=
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.ON_FOOT)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                .build()
+
+        //달리기
+        transitions +=
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.ON_FOOT)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                .build()
 
         //걷기
         transitions +=
@@ -158,7 +181,7 @@ class MyService3 : Service() {
                 .setActivityType(DetectedActivity.WALKING)
                 .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
                 .build()
-
+        //휴식..
         transitions +=
             ActivityTransition.Builder()
                 .setActivityType(DetectedActivity.STILL)
@@ -214,6 +237,7 @@ class MyService3 : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val flag = intent?.getStringExtra("flag")
 
+
         if (flag.equals("start")) {
 
             Defines.log("알림을 실행 ..")
@@ -234,7 +258,11 @@ class MyService3 : Service() {
             scheduleAlarms(applicationContext)
 
         } else if (flag.equals("recognition")) {
-            showNotification("recognition gogo!!")
+            eventStr = if (intent?.getStringExtra("event") == null) {
+                ""
+            } else {
+                intent.getStringExtra("event")!!
+            }
         }else {
             Defines.log("error->70")
             stopSelf()
@@ -497,7 +525,7 @@ class MyService3 : Service() {
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(str)
-            .setContentText("regDate->${getNowTimeToStr()}")
+            .setContentText("${getNowTimeToStr()} / event $eventStr")
             // Set the intent that will fire when the user taps the notification
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
