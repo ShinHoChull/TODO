@@ -60,11 +60,7 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
     val transitions = mutableListOf<ActivityTransition>()
     private val TRANSITIONS_RECEIVER_ACTION = "1"
 
-    val t1 = ""
-    val t2 = ""
-    val t3 = ""
-
-
+    private val branch1 = ""
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
