@@ -56,6 +56,8 @@ class MyService3 : Service() {
     val mTodoRepository: TodoRepository by inject()
 
     val originTesting : String = ""
+    val t1 : String = ""
+    val t1_1 : String = ""
 
     val t1 : String = ""
 
