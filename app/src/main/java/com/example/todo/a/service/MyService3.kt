@@ -55,6 +55,8 @@ class MyService3 : Service() {
     val mGpsRepository: GpsRepository by inject()
     val mTodoRepository: TodoRepository by inject()
 
+    val originTesting : String = ""
+
     private lateinit var currentLocationComponent: CurrentLocationComponent
     private lateinit var locationCallback: LocationCallback
     lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -150,7 +152,7 @@ class MyService3 : Service() {
         val flag = intent?.getStringExtra("flag")
 
 
-        if (flag.equals("start")) { 
+        if (flag.equals("start")) {
 
             Defines.log("알림을 실행 ..")
 
