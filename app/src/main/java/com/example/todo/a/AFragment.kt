@@ -60,6 +60,9 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
     val transitions = mutableListOf<ActivityTransition>()
     private val TRANSITIONS_RECEIVER_ACTION = "1"
 
+    val t1 = ""
+    val t2 = ""
+
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -79,7 +82,7 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
         }
     }
 
-    fun phoneCheckPermission() {
+    private fun phoneCheckPermission() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             TedPermission.with(requireContext())
