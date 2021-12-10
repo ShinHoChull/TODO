@@ -77,6 +77,7 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
         join_button.setOnClickListener {
             phoneCheckPermission()
         }
+
     }
 
     private fun phoneCheckPermission() {

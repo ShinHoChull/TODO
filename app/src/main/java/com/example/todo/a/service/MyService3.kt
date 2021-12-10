@@ -88,6 +88,10 @@ class MyService3 : Service() {
         setUpTransitionHelper()
 
         IS_ACTIVITY_RUNNING = true
+
+
+
+
     }
 
     private fun setUpTransitionHelper() {
