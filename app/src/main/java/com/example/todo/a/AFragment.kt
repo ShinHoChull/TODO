@@ -62,6 +62,7 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
 
     val t1 = ""
     val t2 = ""
+    val t3 = ""
 
 
 
