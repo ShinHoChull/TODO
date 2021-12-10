@@ -150,7 +150,7 @@ class MyService3 : Service() {
         val flag = intent?.getStringExtra("flag")
 
 
-        if (flag.equals("start")) {
+        if (flag.equals("start")) { 
 
             Defines.log("알림을 실행 ..")
 
