@@ -38,7 +38,7 @@ import java.util.function.Consumer
 
 abstract class BaseActivity<B : ViewDataBinding, VM : BaseViewModel>(
     @LayoutRes private val layoutResId: Int
-) : AppCompatActivity() {
+) : AppCompatActivity() { 
 
     lateinit var binding: B
     abstract val viewModel: VM
