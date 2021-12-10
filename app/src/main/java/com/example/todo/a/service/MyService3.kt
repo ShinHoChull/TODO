@@ -57,6 +57,8 @@ class MyService3 : Service() {
 
     val originTesting : String = ""
 
+    val t1 : String = ""
+
     private lateinit var currentLocationComponent: CurrentLocationComponent
     private lateinit var locationCallback: LocationCallback
     lateinit var fusedLocationClient: FusedLocationProviderClient
