@@ -131,4 +131,30 @@ class GpsAccuracyUtil(
     }
 
 
+
+    //                if (lastLocation != null) {
+//
+//
+//                    //시간간격
+//                    val deltaTime = (it.time - lastLocation!!.time) / 1000.0;
+//
+//                    //속도 계산
+//                    val speed = lastLocation!!.distanceTo(it) / deltaTime;
+//
+//                    //거리간격
+//                    val geri = lastLocation!!.distanceTo(it)
+//
+//                    Defines.log("${String.format("%.1f",geri)} m /" +
+//                            " ${String.format("%.1f", speed)} km / ${String.format("%.1f",deltaTime)} ")
+//
+//                    showNotification("${String.format("%.1f",geri)} m /" +
+//                            " ${String.format("%.1f", speed)} km / ${String.format("%.1f",deltaTime)} ")
+//
+//
+//                }
+//
+//                lastLocation = it
+
+
+
 }

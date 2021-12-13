@@ -17,8 +17,8 @@ import com.google.android.gms.location.ActivityTransitionRequest
 import com.google.android.gms.location.DetectedActivity
 
 class TransitionsHelper(
-    private val mContext : Context
-    ) {
+    private val mContext: Context
+) {
 
     private val TRANSITIONS_RECEIVER_ACTION = "1"
     private val transitions = mutableListOf<ActivityTransition>()
@@ -26,8 +26,8 @@ class TransitionsHelper(
     private var callBackListener: CallBackListener? = null
 
     public interface CallBackListener {
-        fun successfulListener(msg : String)
-        fun failListener(msg : String)
+        fun successfulListener(msg: String)
+        fun failListener(msg: String)
     }
 
     init {
@@ -110,7 +110,7 @@ class TransitionsHelper(
         val i2 = Intent(mContext, ActivityRecognitionReceiver::class.java)
         val pi2 = PendingIntent.getBroadcast(mContext, 0, i2, 0)
 
-        if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             if (ActivityCompat.checkSelfPermission(
                     mContext,
                     Manifest.permission.ACTIVITY_RECOGNITION
@@ -124,7 +124,6 @@ class TransitionsHelper(
                     // Handle success
                     Defines.log("Transitions API was successfully registered")
                     callBackListener?.successfulListener("Transitions API was successfully registered")
-
                 }
 
                 task.addOnFailureListener { e: Exception ->
@@ -135,11 +134,18 @@ class TransitionsHelper(
         }
     }
 
-    public fun callReceiver() {
-        val receiver = ActivityRecognitionReceiver()
-        mContext.registerReceiver(receiver , IntentFilter(TRANSITIONS_RECEIVER_ACTION))
+    fun callRemove() {
+        val request = ActivityTransitionRequest(transitions)
+        val i2 = Intent(mContext, ActivityRecognitionReceiver::class.java)
+        val pi2 = PendingIntent.getBroadcast(mContext, 0, i2, 0)
+
+        ActivityRecognition.getClient(mContext).removeActivityTransitionUpdates(pi2)
     }
 
+    public fun callReceiver() {
+        val receiver = ActivityRecognitionReceiver()
+        mContext.registerReceiver(receiver, IntentFilter(TRANSITIONS_RECEIVER_ACTION))
+    }
 
 
 }

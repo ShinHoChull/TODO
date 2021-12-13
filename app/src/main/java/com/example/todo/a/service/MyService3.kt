@@ -48,14 +48,27 @@ import android.location.Location
 import android.util.Log
 import com.example.todo.a.TransitionsHelper
 import com.example.todo.a.recevier.ActivityRecognitionReceiver
+import com.kakao.sdk.common.util.SdkLogLevel
 
+enum class TransitionEnum() {
+    STILL
+    , WALKING
+    , ON_FOOT
+    , ON_BICYCLE
+    , IN_VEHICLE
+    , NULL
+}
 
 class MyService3 : Service() {
 
     val mGpsRepository: GpsRepository by inject()
     val mTodoRepository: TodoRepository by inject()
 
-    val originTesting : String = ""
+    val originTesting: String = ""
+
+    lateinit var mgr : AlarmManager
+
+    var transitionEnum: TransitionEnum = TransitionEnum.NULL
 
     private lateinit var currentLocationComponent: CurrentLocationComponent
     private lateinit var locationCallback: LocationCallback
@@ -65,8 +78,8 @@ class MyService3 : Service() {
 
     private val TRANSITIONS_RECEIVER_ACTION = "1"
 
-    var lastLocation : Location? = null
-    var eventStr : String = ""
+    var lastLocation: Location? = null
+    var eventStr: String = ""
 
     lateinit var mTransitionsHelper: TransitionsHelper
 
@@ -87,10 +100,9 @@ class MyService3 : Service() {
 
         setUpTransitionHelper()
 
+        mgr = getSystemService(ALARM_SERVICE) as AlarmManager
+
         IS_ACTIVITY_RUNNING = true
-
-
-
 
     }
 
@@ -99,11 +111,11 @@ class MyService3 : Service() {
 
         mTransitionsHelper.setCallBackListener(object : TransitionsHelper.CallBackListener {
             override fun successfulListener(msg: String) {
-                showNotification(msg)
+                Toast.makeText(applicationContext, "신체정보 세팅 성공.", Toast.LENGTH_SHORT).show()
             }
 
             override fun failListener(msg: String) {
-                showNotification(msg)
+                Toast.makeText(applicationContext, "신체정보 세팅 실패.", Toast.LENGTH_SHORT).show()
             }
         })
     }
@@ -120,7 +132,7 @@ class MyService3 : Service() {
         }
     }
 
-    private fun createLocationRequestSetup() : LocationRequest {
+    private fun createLocationRequestSetup(): LocationRequest {
         return LocationRequest.create().apply {
             interval = 1000 * 20
             fastestInterval = 5000
@@ -144,7 +156,8 @@ class MyService3 : Service() {
         fusedLocationClient.requestLocationUpdates(
             createLocationRequestSetup(),
             locationCallback,
-            Looper.getMainLooper())
+            Looper.getMainLooper()
+        )
     }
 
 
@@ -152,9 +165,22 @@ class MyService3 : Service() {
         mCsp.put("oldStep", -1)
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val flag = intent?.getStringExtra("flag")
+    private fun stopAlarmAndLocation() {
 
+        if (fusedLocationClient != null) {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
+        }
+
+        val i = Intent(applicationContext, AReceiver::class.java)
+        val pi = PendingIntent.getBroadcast(applicationContext, 0, i, 0)
+
+        if (mgr != null) {
+            mgr.cancel(pi)
+        }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) : Int {
+        val flag = intent?.getStringExtra("flag")
 
         if (flag.equals("start")) {
 
@@ -172,15 +198,85 @@ class MyService3 : Service() {
 
             //showNotification("현재 걸음 -> ${mCsp.getValue("todayStep",0)}")
             getCurrentLocation()
-            scheduleAlarms(applicationContext)
+
+            // 1. 처음 알림을 받아서 신체정보 체크를 한다.
+
+            /* 2. 신체정보가 멈춤 상태로 되어있음.
+             어떻게 할것인가?
+                2-1.
+                일단 모든 알림을 종료시킴.
+
+                신체정보가 멈춤 상태에서 이동중 상태로 변경되면 종료된 알림을 어떻게 실행 시킬것인가?
+
+                 1.알림이 멈췄기때문에 Startcommand 호출이 더이상 안됨.
+                 2.신체정보 Receiver에서 호출을 해야함.
+                    이슈 ->언제 신체정보가 호출이 되는지 파악이 안되어
+                     알림이 중복으로 실행될 수 있음.
+
+                해결사항 -*
+                    알림을 필드변수로 빼놓고 다음 예약된 알림이 없을경우 실행시킨다.
+
+             */
+
+            //신체정보를 받아오지 않으면?
+            if(transitionEnum == TransitionEnum.STILL) {
+
+                Defines.log("stop Alarm.")
+                stopAlarmAndLocation()
+
+            } else {
+
+                Defines.log("go Alarm.")
+                scheduleAlarms(applicationContext)
+            }
+
 
         } else if (flag.equals("recognition")) {
-            eventStr = if (intent?.getStringExtra("event") == null) {
-                ""
-            } else {
-                intent.getStringExtra("event")!!
+
+            var isRun = true
+
+            when (intent?.getIntExtra("transitionType", -1)) {
+
+                DetectedActivity.STILL -> {
+                    eventStr = "정지상태"
+                    transitionEnum = TransitionEnum.STILL
+                    isRun = false
+                }
+
+                DetectedActivity.ON_FOOT -> {
+                    eventStr = "달리기"
+                    transitionEnum = TransitionEnum.ON_FOOT
+                }
+
+                DetectedActivity.ON_BICYCLE -> {
+                    eventStr = "자전거"
+                    transitionEnum = TransitionEnum.ON_BICYCLE
+                }
+
+                DetectedActivity.IN_VEHICLE -> {
+                    eventStr = "자동차"
+                    transitionEnum = TransitionEnum.IN_VEHICLE
+                }
+
+                DetectedActivity.WALKING -> {
+                    eventStr = "걷기"
+                    transitionEnum = TransitionEnum.WALKING
+                }
+
+                else -> {
+                    isRun = false
+                    eventStr = ""
+                    transitionEnum = TransitionEnum.NULL
+                }
             }
-        }else {
+
+            if ( isRun && mgr.nextAlarmClock == null ) {
+                scheduleAlarms(applicationContext)
+            }
+
+            Defines.log("event->$eventStr")
+
+        } else {
             Defines.log("error->70")
             stopSelf()
         }
@@ -189,7 +285,6 @@ class MyService3 : Service() {
     }
 
     private fun scheduleAlarms(ctxt: Context) {
-        val mgr = ctxt.getSystemService(ALARM_SERVICE) as AlarmManager
 
         val i = Intent(ctxt, AReceiver::class.java)
         val pi = PendingIntent.getBroadcast(ctxt, 0, i, 0)
@@ -203,159 +298,133 @@ class MyService3 : Service() {
         mgr.setAlarmClock(ac, pi)
     }
 
+
+
     private fun setUpGPS() {
 
         currentLocationComponent = CurrentLocationComponent(applicationContext,
             {
 
-//                if (lastLocation != null) {
-//
-//
-//                    //시간간격
-//                    val deltaTime = (it.time - lastLocation!!.time) / 1000.0;
-//
-//                    //속도 계산
-//                    val speed = lastLocation!!.distanceTo(it) / deltaTime;
-//
-//                    //거리간격
-//                    val geri = lastLocation!!.distanceTo(it)
-//
-//                    Defines.log("${String.format("%.1f",geri)} m /" +
-//                            " ${String.format("%.1f", speed)} km / ${String.format("%.1f",deltaTime)} ")
-//
-//                    showNotification("${String.format("%.1f",geri)} m /" +
-//                            " ${String.format("%.1f", speed)} km / ${String.format("%.1f",deltaTime)} ")
-//
-//
-//                }
-//
-//                lastLocation = it
+                GlobalScope.launch(Dispatchers.IO) {
+                    //JOB 사이즈 체크
 
-                if (it != null) {
+                    val todoRows = mTodoRepository.getAllTodo()
+                    if (todoRows.isNotEmpty()) {
 
-                    GlobalScope.launch(Dispatchers.IO) {
-                        //JOB 사이즈 체크
+                        for (i in todoRows.indices) {
+                            val todoRow = todoRows[i]
 
-                        val todoRows = mTodoRepository.getAllTodo()
-                        if (todoRows.isNotEmpty()) {
+                            val lastRow = mGpsRepository.getGpsOne(todoRow.id!!)
+                            if (lastRow != null) {
+                                //마지막 저장된 위치
+                                val lastLat = lastRow.latDataStr!!.toDouble()
+                                val lastLng = lastRow.lngDataStr!!.toDouble()
 
-                            for (i in todoRows.indices) {
-                                val todoRow = todoRows[i]
+                                Defines.log("최근 데이터 입력 시간 ->${lastRow.regDateStr!!}")
 
-                                val lastRow = mGpsRepository.getGpsOne(todoRow.id!!)
-                                if (lastRow != null) {
-                                    //마지막 저장된 위치
-                                    val lastLat = lastRow.latDataStr!!.toDouble()
-                                    val lastLng = lastRow.lngDataStr!!.toDouble()
+                                val gpsA = GpsAccuracyUtil(
+                                    getDateStrToDate(lastRow.regDateStr!!)!!,
+                                    Date(),
+                                    INTERVAL_TIME.toDouble()
+                                )
 
-                                    Defines.log("최근 데이터 입력 시간 ->${lastRow.regDateStr!!}")
+                                val currentMil = gpsA.getDistance(
+                                    it.latitude, it.longitude, lastLat, lastLng
+                                )
 
-                                    val gpsA = GpsAccuracyUtil(
-                                        getDateStrToDate(lastRow.regDateStr!!)!!,
-                                        Date(),
-                                        INTERVAL_TIME.toDouble()
-                                    )
-
-                                    val currentMil = gpsA.getDistance(
-                                        it.latitude, it.longitude, lastLat, lastLng
-                                    )
-
-                                    val oldStep = mCsp.getValue("oldStep", -1)
-                                    val todayStep = mCsp.getValue("todayStep", -1)
-                                    if (oldStep == -1) {
-                                        mCsp.put("oldStep", todayStep)
-                                    }
-
-                                    //걸어가고있나?
-                                    if (todayStep > oldStep) {
-                                        //걸음 동기화
-                                        mCsp.put("oldStep",todayStep)
-
-                                        if (gpsA.isWorkMinMaxMovement()) {
-                                            Defines.log("insert Data~")
-                                            showNotification("등록-walk $currentMil m / $todayStep")
-                                            mGpsRepository.insertGpsData(
-                                                GPS(
-                                                    null,
-                                                    todoRow.id,
-                                                    it.latitude,
-                                                    it.longitude,
-                                                    getNowTimeToStr()
-                                                )
-                                            )
-                                        } else {
-
-                                            //허용 시간이 지나면 등록
-                                            if (gpsA.isTimeDifference()) {
-                                                showNotification("등록-walk $currentMil m timeOver")
-                                                mGpsRepository.insertGpsData(
-                                                    GPS(
-                                                        null,
-                                                        todoRow.id,
-                                                        it.latitude,
-                                                        it.longitude,
-                                                        getNowTimeToStr()
-                                                    )
-                                                )
-                                            } else {
-                                                showNotification("미등록-walk $currentMil m / 걸음$todayStep 보")
-                                           }
-                                        }
-
-                                    } else { // 이동수단을 이용하나?
-                                        if (gpsA.isTransMinMaxMovement()) {
-                                            Defines.log("insert Data~")
-                                            showNotification("등록-trans $currentMil m / 걸음$todayStep 보 ")
-                                            mGpsRepository.insertGpsData(
-                                                GPS(
-                                                    null,
-                                                    todoRow.id,
-                                                    it.latitude,
-                                                    it.longitude,
-                                                    getNowTimeToStr()
-                                                )
-                                            )
-                                        } else {
-
-                                            //허용 시간이 지나면 등록
-                                            if (gpsA.isTimeDifference()) {
-                                                showNotification("등록-trans $currentMil m timeOver")
-                                                mGpsRepository.insertGpsData(
-                                                    GPS(
-                                                        null,
-                                                        todoRow.id,
-                                                        it.latitude,
-                                                        it.longitude,
-                                                        getNowTimeToStr()
-                                                    )
-                                                )
-                                            } else {
-                                                showNotification("미등록-trans $currentMil m")
-                                            }
-                                        }
-                                    }
-
-                                } else {
-                                    showNotification()
-                                    mGpsRepository.insertGpsData(
-                                        GPS(
-                                            null,
-                                            todoRow.id,
-                                            it.latitude,
-                                            it.longitude,
-                                            getNowTimeToStr()
-                                        )
-                                    )
+                                val oldStep = mCsp.getValue("oldStep", -1)
+                                val todayStep = mCsp.getValue("todayStep", -1)
+                                if (oldStep == -1) {
+                                    mCsp.put("oldStep", todayStep)
                                 }
-                            }
 
-                            Defines.log("size->" + mGpsRepository.getAllGpsData().size)
-                        } else {
-                            showNotification("miss")
+                                //걸어가고있나?
+                                if (todayStep > oldStep) {
+                                    //걸음 동기화
+                                    mCsp.put("oldStep", todayStep)
+
+                                    if (gpsA.isWorkMinMaxMovement()) {
+                                        Defines.log("insert Data~")
+                                        showNotification("등록-walk $currentMil m / $todayStep")
+                                        mGpsRepository.insertGpsData(
+                                            GPS(
+                                                null,
+                                                todoRow.id,
+                                                it.latitude,
+                                                it.longitude,
+                                                getNowTimeToStr()
+                                            )
+                                        )
+                                    } else {
+
+                                        //허용 시간이 지나면 등록
+                                        if (gpsA.isTimeDifference()) {
+                                            showNotification("등록-walk $currentMil m timeOver")
+                                            mGpsRepository.insertGpsData(
+                                                GPS(
+                                                    null,
+                                                    todoRow.id,
+                                                    it.latitude,
+                                                    it.longitude,
+                                                    getNowTimeToStr()
+                                                )
+                                            )
+                                        } else {
+                                            showNotification("미등록-walk $currentMil m / 걸음$todayStep 보")
+                                        }
+                                    }
+
+                                } else { // 이동수단을 이용하나?
+                                    if (gpsA.isTransMinMaxMovement()) {
+                                        Defines.log("insert Data~")
+                                        showNotification("등록-trans $currentMil m / 걸음$todayStep 보 ")
+                                        mGpsRepository.insertGpsData(
+                                            GPS(
+                                                null,
+                                                todoRow.id,
+                                                it.latitude,
+                                                it.longitude,
+                                                getNowTimeToStr()
+                                            )
+                                        )
+                                    } else {
+
+                                        //허용 시간이 지나면 등록
+                                        if (gpsA.isTimeDifference()) {
+                                            showNotification("등록-trans $currentMil m timeOver")
+                                            mGpsRepository.insertGpsData(
+                                                GPS(
+                                                    null,
+                                                    todoRow.id,
+                                                    it.latitude,
+                                                    it.longitude,
+                                                    getNowTimeToStr()
+                                                )
+                                            )
+                                        } else {
+                                            showNotification("미등록-trans $currentMil m")
+                                        }
+                                    }
+                                }
+
+                            } else {
+                                showNotification()
+                                mGpsRepository.insertGpsData(
+                                    GPS(
+                                        null,
+                                        todoRow.id,
+                                        it.latitude,
+                                        it.longitude,
+                                        getNowTimeToStr()
+                                    )
+                                )
+                            }
                         }
+
+                        Defines.log("size->" + mGpsRepository.getAllGpsData().size)
+                    } else {
+                        showNotification("miss")
                     }
-                } else {
-                    showNotification("miss-111")
                 }
                 //handler.postDelayed(runnable, INTERVAL_TIME)
                 Defines.log("lat->${it.latitude} / lng -> ${it.longitude}")
@@ -367,7 +436,6 @@ class MyService3 : Service() {
             }
         )
     }
-
 
 
     private fun createLocationRequest() {
@@ -407,9 +475,12 @@ class MyService3 : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-//        if (fusedLocationClient != null) {
-//            fusedLocationClient.removeLocationUpdates(locationCallback)
-//        }
+
+        stopAlarmAndLocation()
+
+        if (mTransitionsHelper != null) {
+            mTransitionsHelper.callRemove()
+        }
 
         IS_ACTIVITY_RUNNING = false
     }

@@ -75,7 +75,48 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
        // requestGpsSettingChange()
         //setUpWorker()
         join_button.setOnClickListener {
-            phoneCheckPermission()
+            //phoneCheckPermission()
+            Defines.log("??????")
+            // chronological sequence of events....
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val ain = Intent(requireContext(), MyService3::class.java)
+                ain.putExtra("flag", "recognition")
+                ain.putExtra("transitionType", 3)
+                requireActivity().startForegroundService(ain)
+            } else {
+                val ain = Intent(context, MyService3::class.java)
+                ain.putExtra("flag", "recognition")
+                ain.putExtra("transitionType", 3)
+                requireActivity().startService(ain)
+            }
+        }
+
+        run_button.setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val ain = Intent(requireContext(), MyService3::class.java)
+                ain.putExtra("flag", "recognition")
+                ain.putExtra("transitionType", 2)
+                requireActivity().startForegroundService(ain)
+            } else {
+                val ain = Intent(context, MyService3::class.java)
+                ain.putExtra("flag", "recognition")
+                ain.putExtra("transitionType", 2)
+                requireActivity().startService(ain)
+            }
+        }
+
+        vii_button.setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val ain = Intent(requireContext(), MyService3::class.java)
+                ain.putExtra("flag", "recognition")
+                ain.putExtra("transitionType", 0)
+                requireActivity().startForegroundService(ain)
+            } else {
+                val ain = Intent(context, MyService3::class.java)
+                ain.putExtra("flag", "recognition")
+                ain.putExtra("transitionType", 0)
+                requireActivity().startService(ain)
+            }
         }
 
     }
@@ -127,6 +168,7 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
                 ).apply {
                     putExtra("flag", "start")
                 }
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     requireActivity().startForegroundService(intent)
                 } else {
@@ -149,8 +191,6 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
 
     override fun onResume() {
         super.onResume()
-
-
 
         GlobalScope.launch(Dispatchers.IO) {
 
