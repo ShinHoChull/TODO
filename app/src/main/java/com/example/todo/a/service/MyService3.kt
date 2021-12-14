@@ -64,8 +64,6 @@ class MyService3 : Service() {
     val mGpsRepository: GpsRepository by inject()
     val mTodoRepository: TodoRepository by inject()
 
-    val originTesting: String = ""
-
     lateinit var mgr : AlarmManager
 
     var transitionEnum: TransitionEnum = TransitionEnum.NULL
@@ -79,7 +77,7 @@ class MyService3 : Service() {
     private val TRANSITIONS_RECEIVER_ACTION = "1"
 
     var lastLocation: Location? = null
-    var eventStr: String = ""
+    var eventStr: String = "noAction"
 
     lateinit var mTransitionsHelper: TransitionsHelper
 
@@ -265,7 +263,7 @@ class MyService3 : Service() {
 
                 else -> {
                     isRun = false
-                    eventStr = ""
+                    eventStr = "noAction"
                     transitionEnum = TransitionEnum.NULL
                 }
             }

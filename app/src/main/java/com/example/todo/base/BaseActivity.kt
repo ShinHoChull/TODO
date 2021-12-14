@@ -128,7 +128,6 @@ abstract class BaseActivity<B : ViewDataBinding, VM : BaseViewModel>(
         binding.lifecycleOwner = this
 
         locationCheckPermissions()
-
     }
 
 

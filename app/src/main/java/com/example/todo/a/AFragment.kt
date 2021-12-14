@@ -209,6 +209,16 @@ class AFragment : BaseFragment<FragmentABinding, AViewModel>(
 
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        if (MyService3.IS_ACTIVITY_RUNNING) {
+            requireActivity()
+                .stopService(
+                    Intent( requireContext() , MyService3::class.java )
+                )
+        }
+    }
+
     private fun setUpObserver() {
 
         viewModel.removeList.observe(viewLifecycleOwner) {
